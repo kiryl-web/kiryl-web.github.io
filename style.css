@@ -50,13 +50,16 @@ summary {
 
 p,
 summary,
-i, 
-li {
+i{
   width: 100%;
   font-size: 14pt;
   margin-top: 1em;
   margin-bottom: 1em;
   text-align: left;
+}
+ 
+li {
+  font-size: 14pt; 
 }
 
 ol,
