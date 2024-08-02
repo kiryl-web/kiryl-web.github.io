@@ -96,8 +96,7 @@ a {
   text-decoration: none;
 }
 
-@media (max-width: 1080px) {
-
+@media (max-width: 1090px) {
 
   body { 
     max-width: none;
