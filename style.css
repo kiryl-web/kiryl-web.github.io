@@ -98,23 +98,6 @@ a {
 
 @media (max-width: 1080px) {
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-size: calc(var(--base-font-size) + 8pt);
-  }
-
-  p,
-  i {
-    font-size: calc(var(--base-font-size) + 2pt);
-  }
-
-  li {
-    font-size: calc(var(--base-font-size) + 2pt);
-  }
 
   body {
     max-width: none;
