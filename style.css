@@ -95,16 +95,7 @@ li {
 a {
   text-decoration: none;
 }
-
-@media (max-width: 1081) {
-
-  body { 
-    max-width: none;
-    margin: 16px;
-    padding: 1cm;
-  }
-}
-
+ 
 .container {
   display: flex;
   flex-direction: column;
