@@ -102,6 +102,7 @@ a {
   body {
     background-color: var(--bg-color);
     color: var(--text-color);
+    font-size: 0.05em;
     font-family: var(--font-family);  
     display: flex;
     flex-direction: column;
