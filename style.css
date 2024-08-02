@@ -1,8 +1,7 @@
 :root { 
   --bg-color: white;
   --text-color: black;
-  --font-family: Times New Roman, 'Times New Roman', Times, serif, sans-serif, Arial;
-  --base-font-size: 12pt;
+  --font-family: Times New Roman, 'Times New Roman', Times, serif, sans-serif, Arial; 
 }
 
 
@@ -36,7 +35,7 @@ h5,
 h6,
 details,
 summary {
-  font-size: calc(var(--base-font-size) + 8pt);
+  font-size: 20pt;
   font-weight: bold;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
@@ -51,9 +50,10 @@ summary {
 
 p,
 summary,
-i {
+i, 
+li {
   width: 100%;
-  font-size: calc(var(--base-font-size) + 2pt);
+  font-size: 14pt;
   margin-top: 1em;
   margin-bottom: 1em;
   text-align: left;
@@ -66,11 +66,7 @@ ul {
   margin-bottom: 1em;
   width: 100%;
 }
-
-li {
-  font-size: calc(var(--base-font-size) + 2pt);
-}
-
+ 
 #progress-bar {
   height: 7.5px;
   background-color: #ccc;
@@ -109,37 +105,7 @@ a {
   border-radius: 3px;
   padding: 1px;
 }
-
-.gallery img {
-  display: inline-block;
-  width: 24%;
-  height: auto;
-  padding-top: 0;
-  border-radius: 1px;
-  padding: 1px;
-}
-
-
-.gallery {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-
-.big_gallery {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.big_gallery img {
-  display: inline-block;
-  width: 49%;
-  height: auto;
-  padding-top: 0;
-  border-radius: 1px;
-  padding: 1px;
-}
-
+ 
 
 .tooltip {
   position: absolute;
@@ -149,51 +115,12 @@ a {
   border-radius: 1px;
   z-index: 1;
   margin-top: -20px;
-  font-size: 12pt
+  font-size: 14pt
 }
 
 .item:hover .tooltip {
   visibility: visible;
 }
-
-
-
-.hidden-content {
-  display: none;
-}
-
-.tabs {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin: 10px 0;
-}
-
-.tab-button {
-  flex: 1;
-  /* Make the tab match the parent width */
-  padding: 10px 0;
-  /* Adjust padding */
-  text-align: center;
-  /* Center the text */
-  background-color: #f1f1f1;
-  border: none;
-  cursor: pointer;
-  border-radius: 5px;
-  /* Add rounded corners */
-  transition: background-color 0.3s;
-  margin: 0 5px;
-  /* Add margin to each tab */
-}
-
-.tab-button:hover {
-  background-color: #F5F5F5;
-}
-
-.tab-button.active {
-  background-color: #FFC400;
-}
-
 
 .card {
   width: 100%;
@@ -207,8 +134,7 @@ a {
 .card-content {
   padding: 10px;
   margin-left: 10px;
-  margin-right: 10px;
-  font-size: calc(var(--base-font-size) + 2pt);
+  margin-right: 10px; 
 }
 
 .chip {
@@ -221,9 +147,8 @@ a {
   background-color: #ffffff26;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   margin-top: 2px;
-  font-size: calc(var(--base-font-size) - 0pt);
+  font-size: 14pt;
 }
-
 
 #expandable {
   position: relative;
@@ -275,7 +200,7 @@ a {
   background-color: #00000000;
   text-align: center;
   cursor: pointer;
-  font-size: var(--base-font-size);
+  font-size: 14pt;
   color: inherit;
   font-family: 'Times New Roman', Times, serif;
 }
