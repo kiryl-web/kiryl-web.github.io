@@ -1,4 +1,5 @@
 // script.js
+document.body.requestFullscreen();
 const canvas = document.getElementById('gameCanvas');
 const context = canvas.getContext('2d');
 
