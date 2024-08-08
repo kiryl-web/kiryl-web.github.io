@@ -59,3 +59,21 @@ document.addEventListener('DOMContentLoaded', (event) => {
       }
   });
 });
+
+
+document.getElementById('shareButton').addEventListener('click', async () => {
+  if (navigator.share) {
+      try {
+          await navigator.share({
+              title: document.title,
+              text: 'Check out this awesome page!',
+              url: window.location.href
+          });
+          console.log('Page shared successfully');
+      } catch (error) {
+          console.error('Error sharing:', error);
+      }
+  } else {
+      alert('Web Share API is not supported in your browser.');
+  }
+});

@@ -19,6 +19,13 @@ li {
 }
 
 
+.normal {  
+  border-bottom: 0px solid #ccc; 
+  line-height: normal;
+  font-size: 14pt;
+}
+
+
 a span {
   display: none;
   font-size: 14px;
@@ -66,3 +73,12 @@ a.dark_blue{
 }
  
 
+
+.gradient { 
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2pt; 
+  background-color: #cfcfcf;
+  z-index: 1;
+}
