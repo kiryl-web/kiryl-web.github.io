@@ -1,12 +1,12 @@
 :root { 
   --bg-color: white;
-  --text-color: black;
+  --text-color: rgb(0, 0, 0);
   --font-family: Times New Roman, 'Times New Roman', Times, serif, sans-serif, Arial; 
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-color: black;
+    --bg-color: rgb(0, 0, 0);
     --text-color: white;
   } 
 }
