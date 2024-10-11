@@ -119,11 +119,17 @@ a {
 
 .card {
   width: 100%;
-  background-color: #ffffff14;
+  background-color: rgba(0, 0, 0, 0.137);
   border-radius: 5px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   text-align: justify;
+}
+
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: #ffffff14;
+  }
 }
 
 .card-content {
@@ -208,8 +214,8 @@ a {
 .cta {
   width: 100%;
   height: auto;
-  
-  margin-bottom: -0.5cm; 
+
+  margin-bottom: -0.5cm;
 }
 
 .cta iframe {
@@ -224,11 +230,11 @@ a {
 
 
 @media (max-width: 14cm) {
-  .cta { 
+  .cta {
     width: 100vw;
   }
 
-  .cta iframe{
+  .cta iframe {
     height: 612px;
   }
-} 
+}
