@@ -104,12 +104,12 @@ a {
 
 .tooltip {
   position: absolute;
-  background-color: black;
+  background-color: rgba(0, 0, 0, 0.75);
   color: white;
   padding: 2px;
   border-radius: 1px;
   z-index: 1;
-  margin-top: -20px;
+  margin-top: -22pt;
   font-size: 14pt
 }
 
