@@ -163,18 +163,7 @@ a {
   height: auto;
 }
 
-#expandable .more-indicator {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 5px 10px;
-  border-radius: 5px;
-  display: none;
-}
 
-#expandable.collapsed .more-indicator {
-  display: block;
-}
 
 #expandable:after {
   content: '';
