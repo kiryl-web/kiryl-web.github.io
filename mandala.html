@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mandala Surface</title>
+  <style>
+    /* Ensure full-screen canvas without scrollbars */
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="mandala"></canvas>
+  <script>
+  (function() {
+    const canvas = document.getElementById('mandala');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const particles = [];
+    const symmetry = 8;
+    const maxRadiusFraction = 1.2;
+    const maxParticles = symmetry * 4;
+    let frameCount = 0;
+
+    class Particle {
+      constructor(type, baseAngle, speed, maxRadius, fadeStart, size, color, symmetry) {
+        this.type = type;
+        this.baseAngle = baseAngle;
+        this.speed = speed;
+        this.maxRadius = maxRadius;
+        this.fadeStart = fadeStart;
+        this.size = size;
+        this.color = { ...color };
+        this.symmetry = symmetry;
+        this.radius = 0;
+        this.rotation = 0;
+      }
+
+      static random(maxRadius, symmetry) {
+        const color = {
+          r: Math.floor(Math.random() * 256),
+          g: Math.floor(Math.random() * 256),
+          b: Math.floor(Math.random() * 256),
+          a: (Math.random() * (1 - 0.588) + 0.588)
+        };
+        const types = ['CIRCLE', 'TRIANGLE', 'SQUARE'];
+        return new Particle(
+          types[Math.floor(Math.random() * types.length)],
+          Math.random() * 360,
+          Math.random() * 3 + 2,
+          maxRadius,
+          Math.round(maxRadius * 0.3),
+          Math.random() * 70 + 10,
+          color,
+          symmetry
+        );
+      }
+
+      update() {
+        this.radius += this.speed;
+        if (this.radius >= this.fadeStart) {
+          this.color.a = Math.max(0, this.color.a - 1 / 255);
+        }
+      }
+
+      get isAlive() {
+        return this.color.a > 0 && this.radius <= this.maxRadius;
+      }
+
+      draw(ctx) {
+        const sectorAngle = (2 * Math.PI) / this.symmetry;
+        ctx.fillStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${this.color.a})`;
+
+        for (let i = 0; i < this.symmetry; i++) {
+          ctx.save();
+          ctx.rotate((this.baseAngle * Math.PI) / 180 + i * sectorAngle);
+          ctx.translate(this.radius, 0);
+          ctx.rotate((this.rotation * Math.PI) / 180);
+
+          if (this.type === 'CIRCLE') {
+            ctx.beginPath();
+            ctx.arc(0, 0, this.size, 0, 2 * Math.PI);
+            ctx.fill();
+          } else {
+            const sides = this.type === 'TRIANGLE' ? 3 : 4;
+            ctx.beginPath();
+            for (let j = 0; j < sides; j++) {
+              const theta = (2 * Math.PI * j) / sides - Math.PI / 2;
+              const x = Math.cos(theta) * this.size;
+              const y = Math.sin(theta) * this.size;
+              j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+      }
+    }
+
+    function animate() {
+      frameCount++;
+      if (frameCount % 10 === 0 && particles.length < maxParticles) {
+        const maxR = Math.round(maxRadiusFraction * Math.min(width, height));
+        particles.push(Particle.random(maxR, symmetry));
+      }
+
+      particles.forEach(p => p.update());
+      for (let i = particles.length - 1; i >= 0; i--) {
+        if (!particles[i].isAlive) particles.splice(i, 1);
+      }
+
+      const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      ctx.fillStyle = dark ? '#111111' : '#FFFFFF';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      particles.forEach(p => p.draw(ctx));
+      ctx.restore();
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  })();
+  </script>
+</body>
+</html>
