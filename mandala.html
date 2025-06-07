@@ -2,19 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=0.5">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mandala Surface</title>
   <style>
     /* Ensure full-screen canvas without scrollbars */
     body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
+    canvas { display: block; cursor: pointer; }
+    /* Fullscreen message styling */
+    #fs-message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(0,0,0,0.5);
+      font-size: 1.2rem;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    :fullscreen #fs-message {
+      opacity: 0;
+    }
   </style>
 </head>
 <body>
+  <div id="fs-message"></div>
   <canvas id="mandala"></canvas>
   <script>
   (function() {
     const canvas = document.getElementById('mandala');
+    const fsMessage = document.getElementById('fs-message');
     const ctx = canvas.getContext('2d');
     let width, height;
 
@@ -24,6 +40,20 @@
     }
     window.addEventListener('resize', resize);
     resize();
+
+    // Request fullscreen on first click
+    function enterFullscreen() {
+      if (document.fullscreenElement) return;
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen();
+      }
+    }
+    canvas.addEventListener('click', enterFullscreen, { once: true });
 
     const particles = [];
     const symmetry = 8;
@@ -44,13 +74,12 @@
         this.radius = 0;
         this.rotation = 0;
       }
-
       static random(maxRadius, symmetry) {
         const color = {
           r: Math.floor(Math.random() * 256),
           g: Math.floor(Math.random() * 256),
           b: Math.floor(Math.random() * 256),
-          a: (Math.random() * (1 - 0.588) + 0.588)
+          a: Math.random() * (1 - 0.588) + 0.588
         };
         const types = ['CIRCLE', 'TRIANGLE', 'SQUARE'];
         return new Particle(
@@ -64,28 +93,23 @@
           symmetry
         );
       }
-
       update() {
         this.radius += this.speed;
         if (this.radius >= this.fadeStart) {
           this.color.a = Math.max(0, this.color.a - 1 / 255);
         }
       }
-
       get isAlive() {
         return this.color.a > 0 && this.radius <= this.maxRadius;
       }
-
       draw(ctx) {
         const sectorAngle = (2 * Math.PI) / this.symmetry;
         ctx.fillStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${this.color.a})`;
-
         for (let i = 0; i < this.symmetry; i++) {
           ctx.save();
           ctx.rotate((this.baseAngle * Math.PI) / 180 + i * sectorAngle);
           ctx.translate(this.radius, 0);
           ctx.rotate((this.rotation * Math.PI) / 180);
-
           if (this.type === 'CIRCLE') {
             ctx.beginPath();
             ctx.arc(0, 0, this.size, 0, 2 * Math.PI);
@@ -113,24 +137,19 @@
         const maxR = Math.round(maxRadiusFraction * Math.min(width, height));
         particles.push(Particle.random(maxR, symmetry));
       }
-
       particles.forEach(p => p.update());
       for (let i = particles.length - 1; i >= 0; i--) {
         if (!particles[i].isAlive) particles.splice(i, 1);
       }
-
       const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       ctx.fillStyle = dark ? '#111111' : '#FFFFFF';
       ctx.fillRect(0, 0, width, height);
-
       ctx.save();
       ctx.translate(width / 2, height / 2);
       particles.forEach(p => p.draw(ctx));
       ctx.restore();
-
       requestAnimationFrame(animate);
     }
-
     animate();
   })();
   </script>
