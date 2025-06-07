@@ -18,6 +18,7 @@
       font-size: 1.2rem;
       pointer-events: none;
       transition: opacity 0.3s;
+      user-select: none;
     }
     :fullscreen #fs-message {
       opacity: 0;
@@ -41,19 +42,20 @@
     window.addEventListener('resize', resize);
     resize();
 
-    // Request fullscreen on first click
-    function enterFullscreen() {
-      if (document.fullscreenElement) return;
+    // Toggle fullscreen on click
+    function toggleFullscreen() {
       const elem = document.documentElement;
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-      } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen();
-      } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen();
+      if (!document.fullscreenElement) {
+        if (elem.requestFullscreen) elem.requestFullscreen();
+        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+        else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
       }
     }
-    canvas.addEventListener('click', enterFullscreen, { once: true });
+    document.addEventListener('click', toggleFullscreen);
 
     const particles = [];
     const symmetry = 8;
@@ -69,7 +71,7 @@
         this.maxRadius = maxRadius;
         this.fadeStart = fadeStart;
         this.size = size;
-        this.color = { ...color };
+        this.color = {...color};
         this.symmetry = symmetry;
         this.radius = 0;
         this.rotation = 0;
@@ -107,24 +109,23 @@
         ctx.fillStyle = `rgba(${this.color.r},${this.color.g},${this.color.b},${this.color.a})`;
         for (let i = 0; i < this.symmetry; i++) {
           ctx.save();
-          ctx.rotate((this.baseAngle * Math.PI) / 180 + i * sectorAngle);
+          ctx.rotate((this.baseAngle * Math.PI)/180 + i * sectorAngle);
           ctx.translate(this.radius, 0);
-          ctx.rotate((this.rotation * Math.PI) / 180);
+          ctx.rotate((this.rotation * Math.PI)/180);
           if (this.type === 'CIRCLE') {
             ctx.beginPath();
-            ctx.arc(0, 0, this.size, 0, 2 * Math.PI);
+            ctx.arc(0,0,this.size,0,2*Math.PI);
             ctx.fill();
           } else {
-            const sides = this.type === 'TRIANGLE' ? 3 : 4;
+            const sides = this.type === 'TRIANGLE'?3:4;
             ctx.beginPath();
-            for (let j = 0; j < sides; j++) {
-              const theta = (2 * Math.PI * j) / sides - Math.PI / 2;
-              const x = Math.cos(theta) * this.size;
-              const y = Math.sin(theta) * this.size;
-              j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            for (let j=0; j<sides; j++) {
+              const theta = (2*Math.PI*j)/sides - Math.PI/2;
+              const x = Math.cos(theta)*this.size;
+              const y = Math.sin(theta)*this.size;
+              j===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
             }
-            ctx.closePath();
-            ctx.fill();
+            ctx.closePath(); ctx.fill();
           }
           ctx.restore();
         }
@@ -133,20 +134,19 @@
 
     function animate() {
       frameCount++;
-      if (frameCount % 10 === 0 && particles.length < maxParticles) {
-        const maxR = Math.round(maxRadiusFraction * Math.min(width, height));
+      if (frameCount%10===0 && particles.length<maxParticles) {
+        const maxR = Math.round(maxRadiusFraction * Math.min(width,height));
         particles.push(Particle.random(maxR, symmetry));
       }
-      particles.forEach(p => p.update());
-      for (let i = particles.length - 1; i >= 0; i--) {
-        if (!particles[i].isAlive) particles.splice(i, 1);
+      particles.forEach(p=>p.update());
+      for (let i=particles.length-1;i>=0;i--) {
+        if (!particles[i].isAlive) particles.splice(i,1);
       }
       const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      ctx.fillStyle = dark ? '#111111' : '#FFFFFF';
-      ctx.fillRect(0, 0, width, height);
-      ctx.save();
-      ctx.translate(width / 2, height / 2);
-      particles.forEach(p => p.draw(ctx));
+      ctx.fillStyle = dark?'#111111':'#FFFFFF';
+      ctx.fillRect(0,0,width,height);
+      ctx.save(); ctx.translate(width/2,height/2);
+      particles.forEach(p=>p.draw(ctx));
       ctx.restore();
       requestAnimationFrame(animate);
     }
