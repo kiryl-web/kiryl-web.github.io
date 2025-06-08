@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mandala Surface</title>
+  <title>Visual meditation</title>
   <style>
     /* Ensure full-screen canvas without scrollbars */
     body { margin: 0; overflow: hidden; }
@@ -87,7 +87,7 @@
         return new Particle(
           types[Math.floor(Math.random() * types.length)],
           Math.random() * 360,
-          Math.random() * 1 + 1,
+          Math.random() * 0.8 + 0.5,
           maxRadius,
           Math.round(maxRadius * 0.3),
           Math.random() * 30 + 10,
