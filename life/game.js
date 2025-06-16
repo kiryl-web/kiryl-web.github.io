@@ -1,21 +1,24 @@
-// script.js
 document.body.requestFullscreen();
+
 const canvas = document.getElementById('gameCanvas');
 const context = canvas.getContext('2d');
+ 
+canvas.width = screen.width;
+canvas.height = screen.height;
 
 const PIXEL_SIZE = 10;
-const GRID_WIDTH = canvas.width / PIXEL_SIZE;
-const GRID_HEIGHT = canvas.height / PIXEL_SIZE;
+let GRID_WIDTH = Math.floor(canvas.width / PIXEL_SIZE);
+let GRID_HEIGHT = Math.floor(canvas.height / PIXEL_SIZE);
 
 let redPixelX = Math.floor(GRID_WIDTH / 2);
 let redPixelY = Math.floor(GRID_HEIGHT / 2);
 let delay = 100;
 let competitionMode = false;
 const directions = [
-    { dx: 1, dy: 0 }, // Right
-    { dx: -1, dy: 0 }, // Left
-    { dx: 0, dy: 1 }, // Down
-    { dx: 0, dy: -1 } // Up
+    { dx: 1, dy: 0 },
+    { dx: -1, dy: 0 },
+    { dx: 0, dy: 1 },
+    { dx: 0, dy: -1 }
 ];
 const randomPixels = [];
 
@@ -23,7 +26,7 @@ const blackColor = 'black';
 const whiteColor = 'white';
 const redColor = 'red';
 
-const pixelGrid = Array.from({ length: GRID_WIDTH }, () => Array(GRID_HEIGHT).fill(blackColor));
+let pixelGrid = Array.from({ length: GRID_WIDTH }, () => Array(GRID_HEIGHT).fill(blackColor));
 
 function drawPixel(x, y, color) {
     context.fillStyle = color;
@@ -46,7 +49,7 @@ function moveRedPixel() {
     } else {
         if (pixelGrid[redPixelX][redPixelY] === blackColor) {
             pixelGrid[redPixelX][redPixelY] = whiteColor;
-        } else if (!competitionMode && pixelGrid[redPixelX][redPixelY] === whiteColor) {
+        } else if (pixelGrid[redPixelX][redPixelY] === whiteColor) {
             pixelGrid[redPixelX][redPixelY] = blackColor;
         }
     }
@@ -64,7 +67,7 @@ function moveRandomPixels() {
             const currentColor = pixelGrid[pixel.x][pixel.y];
             if (currentColor === blackColor) {
                 pixelGrid[pixel.x][pixel.y] = pixel.targetColor;
-            } else if (!competitionMode && currentColor !== redColor) {
+            } else if (currentColor !== redColor) {
                 pixelGrid[pixel.x][pixel.y] = blackColor;
             }
         }
@@ -84,53 +87,26 @@ function addRandomPixel() {
 }
 
 function reset() {
-    for (let x = 0; x < GRID_WIDTH; x++) {
-        for (let y = 0; y < GRID_HEIGHT; y++) {
-            pixelGrid[x][y] = blackColor;
-        }
-    }
-
+    pixelGrid = Array.from({ length: GRID_WIDTH }, () => Array(GRID_HEIGHT).fill(blackColor));
     randomPixels.length = 0;
     redPixelX = Math.floor(GRID_WIDTH / 2);
     redPixelY = Math.floor(GRID_HEIGHT / 2);
     competitionMode = false;
 }
 
-function increaseDelay() {
-    delay = 100;
-}
-
-function decreaseDelay() {
-    delay = 0;
-}
-
-function normalDelay() {
-    delay = 50;
-}
+function increaseDelay() { delay = 100; }
+function decreaseDelay() { delay = 0; }
+function normalDelay() { delay = 50; }
 
 document.addEventListener('keydown', (event) => {
     switch (event.code) {
-        case 'Escape':
-            window.close();
-            break;
-        case 'KeyT':
-            competitionMode = !competitionMode;
-            break;
-        case 'KeyN':
-            addRandomPixel();
-            break;
-        case 'KeyC':
-            reset();
-            break;
-        case 'KeyF':
-            increaseDelay();
-            break;
-        case 'KeyG':
-            normalDelay();
-            break;
-        case 'KeyH':
-            decreaseDelay();
-            break;
+        case 'Escape': window.close(); break;
+        case 'KeyT': competitionMode = !competitionMode; break;
+        case 'KeyN': addRandomPixel(); break;
+        case 'KeyC': reset(); break;
+        case 'KeyF': increaseDelay(); break;
+        case 'KeyG': normalDelay(); break;
+        case 'KeyH': decreaseDelay(); break;
     }
 });
 
