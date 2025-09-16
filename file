@@ -14,3 +14,10 @@
       <button id="toggleButton">Expand</button>
 
     </div>
+
+    <p><a href="#purpose">Jump to the bottom</a></p>
+    <div id="purpose"></div>
+
+    
+    <div id="top"></div>
+    <p><a href="#top">Jump to the top</a></p>
