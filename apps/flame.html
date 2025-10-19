@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Flame Surface</title>
+  <style>
+    :root {
+      --bg-dark: #121212;      /* soft black */
+      --bg-light: #ffffff;
+    }
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden; /* avoid scroll in fullscreen */
+      background: var(--bg-dark);
+    }
+    html[data-theme="light"] body { background: var(--bg-light); }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      touch-action: manipulation; /* prevent double-tap zoom */
+      
+    }
+ 
+    html[data-theme="dark"] .hint { color: #aaa; background: rgba(255,255,255,.04); }
+  </style>
+</head>
+<body>
+  <canvas id="view"></canvas>
+ 
+
+  <script>
+    "use strict";
+ 
+    const canvas = document.getElementById("view");
+    const ctx = canvas.getContext("2d", { alpha: false });  
+
+    const DPR = () => Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+    function resize() {
+      const dpr = DPR();
+      const w = Math.floor(window.innerWidth);
+      const h = Math.floor(window.innerHeight);
+      canvas.style.width  = w + "px";
+      canvas.style.height = h + "px";
+      canvas.width  = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); 
+    }
+    window.addEventListener("resize", resize, { passive: true });
+    resize();
+ 
+    function toggleTheme() {
+      const html = document.documentElement;
+      html.setAttribute("data-theme",
+        html.getAttribute("data-theme") === "dark" ? "light" : "dark");
+    }
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "t" || e.key === "T") toggleTheme();
+    });
+ 
+    async function toggleFullscreen() {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+        } else {
+         await document.exitFullscreen();
+        }
+      } catch (err) { 
+
+      }
+    }
+    window.addEventListener("click", toggleFullscreen);
+ 
+    const particles = [];
+    const MAX_PARTICLES = 256;
+    const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+    const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
+
+    class FlameParticle {
+      constructor(x, y) {
+        this.x = x | 0;
+        this.y = y | 0;
+        this.size = rnd(10, 40);
+        this.alpha = 255;
+        this.red = 255;
+        this.green = rnd(100, 250);
+        this.speedY = rnd(1, 4);
+      }
+      update() {
+        this.y -= this.speedY;
+        this.alpha -= 1;
+        this.green = clamp(this.green - 2, 0, 255);
+        return this.alpha > 0;
+      }
+      draw(ctx) {
+        ctx.fillStyle = `rgba(${this.red},${this.green},0,${this.alpha / 255})`;
+        const s = this.size * 2;
+        ctx.fillRect(this.x, this.y, s, s);
+      }
+    }
+ 
+    function isDark() {
+      return document.documentElement.getAttribute("data-theme") === "dark";
+    }
+
+    function spawn() { 
+      if (particles.length < MAX_PARTICLES) {
+        const x = rnd(0, canvas.clientWidth);
+        const y = canvas.clientHeight + 50;
+        particles.push(new FlameParticle(x, y));
+      }
+    }
+
+    function drawBackground() {
+      ctx.fillStyle = isDark() ? "#121212" : "#ffffff";
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    }
+
+let frameCount = 0;
+
+function tick() {
+  frameCount++;
+ 
+  if (Math.random() < 0.6) {
+    spawn();
+  }
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    if (!particles[i].update()) particles.splice(i, 1);
+  }
+
+  drawBackground();
+  for (let i = 0; i < particles.length; i++) {
+    particles[i].draw(ctx);
+  }
+
+  requestAnimationFrame(tick);
+}
+
+    requestAnimationFrame(tick);
+
+    // ========================= Optional: kill on tap (like handleClick) =========================
+    // If you want to purge nearby particles on pointer down (fun interaction),
+    // uncomment the block below.
+    
+    /**
+    window.addEventListener("pointerdown", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        if (Math.abs(p.x - px) < 60 && Math.abs(p.y - py) < 60) p.alpha = 0;
+      }
+    }, { passive: true });
+    */
+  </script>
+</body>
+</html>
