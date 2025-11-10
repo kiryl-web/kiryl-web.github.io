@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Piano Player</title>
+    <style>
+        :root {
+            --bg: #fff;
+            --fg: #000;
+            --white: #fbfbfb;
+            --black: #111;
+            --accent: #1e88e5;
+            --font: "Times New Roman", Times, serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #000;
+                --fg: #fff;
+            }
+        }
+
+        html,
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: var(--font); 
+           height: 100%; 
+
+        }
+ 
+
+        .wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 16px
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px
+        }
+
+        h1 {
+            font-size: 20pt;
+            margin: 0
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap
+        }
+
+        .controls label {
+            font-size: 14px
+        }
+
+        .kbd {
+            user-select: none;
+            position: relative;
+            height: 220px;
+            border-radius: 8px;
+            padding: 12px;
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .06)
+        }
+
+        .white-keys {
+            position: relative;
+            height: 100%;
+            display: flex
+        }
+
+        .white {
+            flex: 1;
+            background: var(--white);
+            border: 1px solid #dcdcdc;
+            border-bottom: 4px solid #d0d0d0;
+            border-right: none;
+            border-radius: 0 0 6px 6px;
+            position: relative
+        }
+
+        .white:last-child {
+            border-right: 1px solid #dcdcdc
+        }
+
+        .white.active {
+            background: #fff;
+            border-bottom-color: var(--accent);
+            box-shadow: inset 0 -6px 0 var(--accent)
+        }
+
+        .white .label {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 700;
+            color: #222;
+            letter-spacing: .3px
+        }
+
+        .black {
+            position: absolute;
+            top: 0;
+            width: calc(100%/52 * 0.64);
+            height: 66%;
+            background: var(--black);
+            border-radius: 0 0 6px 6px;
+            z-index: 2;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .35)
+        }
+
+        .black.active {
+            background: #333
+        }
+
+        .black .label {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #eee
+        }
+
+        footer {
+            margin-top: 10px;
+            font-size: 12pt
+        }
+
+        code {
+            background: #efefef;
+            padding: 2px 6px;
+            border-radius: 4px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header>
+            <h1>Piano Player</h1>
+            <div class="controls">
+                <label>Volume <input id="vol" type="range" min="0" max="1" step="0.01" value="0.9"></label>
+                <label><input id="sustain" type="checkbox" checked> Sustain</label>
+                <button id="stopAll">Stop all</button>
+            </div>
+        </header>
+
+        <div class="kbd" id="kbd" style="width:100%;">
+            <div class="white-keys" id="whiteRow"></div>
+            <!-- black keys are inserted into whiteRow -->
+        </div>
+
+        <p>Click keys to play. Use keyboard A W S E D F T G Y H U J K, but only with the English layout.</p>
+        <div id="now">Ready</div>
+
+    </div>
+
+    <script>
+        (function () {
+            // Visible range only
+            const K_MIN = 28; // C3
+            const K_MAX = 75; // B6
+
+            const A4 = 440.0;
+            const FOLDER = "out_wav_88"; // contains 1.wav..88.wav
+
+            function keyToFreq(k) { return A4 * Math.pow(2, (k - 49) / 12); }
+            const NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+            function keyToName(k) { const m = k + 20; return `${NAMES[m % 12]}${Math.floor(m / 12) - 1}`; }
+            function isBlack(midi) { const pc = midi % 12; return [1, 3, 6, 8, 10].includes(pc); }
+            function naturalName(name) { return name.replace(/#.*|\/.*/, ''); }
+            function filenameForKey(k) { return `${FOLDER}/${k}.wav`; }
+            function inRange(k) { return k >= K_MIN && k <= K_MAX; }
+
+            const whiteRow = document.getElementById('whiteRow');
+            const kbd = document.getElementById('kbd');
+            const vol = document.getElementById('vol');
+            const sustain = document.getElementById('sustain');
+            const nowDiv = document.getElementById('now');
+            const stopAllBtn = document.getElementById('stopAll');
+
+            // Build metadata for the visible range
+            const keys = [];
+            for (let k = K_MIN; k <= K_MAX; k++) {
+                const midi = k + 20, name = keyToName(k), black = isBlack(midi);
+                keys.push({ k, midi, name, black });
+            }
+            const whiteKeys = keys.filter(x => !x.black);
+
+            // Render white keys
+            whiteKeys.forEach(info => {
+                const el = document.createElement('div');
+                el.className = 'white';
+                el.dataset.k = info.k;
+                const label = document.createElement('span');
+                label.className = 'label';
+                label.textContent = naturalName(info.name);
+                el.appendChild(label);
+                whiteRow.appendChild(el);
+            });
+
+            // Place black keys relative to whiteRow
+            const WHITE_COUNT = whiteKeys.length;
+            const keyWidthPct = 100 / WHITE_COUNT;
+            let whiteIndex = 0; // counts visible whites encountered
+            for (let k = K_MIN; k <= K_MAX; k++) {
+                const midi = k + 20;
+                if (!isBlack(midi)) { whiteIndex++; continue; }
+                const el = document.createElement('div');
+                el.className = 'black';
+                el.dataset.k = k;
+                el.style.left = `${whiteIndex * keyWidthPct}%`;
+                const lab = document.createElement('span'); lab.className = 'label'; lab.textContent = keyToName(k);
+                el.appendChild(lab);
+                whiteRow.appendChild(el);
+            }
+
+            // Audio: preload one element per visible key, reuse it
+            const audioMap = new Map();
+            for (let k = K_MIN; k <= K_MAX; k++) {
+                const a = new Audio(filenameForKey(k));
+                a.preload = 'auto';
+                a.volume = parseFloat(vol.value);
+                audioMap.set(k, a);
+            }
+
+            const downKeys = new Set();
+
+            function activate(k) { const el = document.querySelector(`[data-k="${k}"]`); if (el) el.classList.add('active'); }
+            function deactivate(k) { const el = document.querySelector(`[data-k="${k}"]`); if (el) el.classList.remove('active'); }
+
+            function playKey(k) {
+                if (!inRange(k)) return;
+                const a = audioMap.get(k); if (!a) return;
+                a.pause(); a.currentTime = 0;
+                a.volume = parseFloat(vol.value);
+                a.play().catch(() => { });
+                nowDiv.textContent = `${keyToName(k)} • ${keyToFreq(k).toFixed(3)} Hz`;
+            }
+
+            function stopKey(k) {
+                if (!inRange(k)) return;
+                const a = audioMap.get(k); if (!a) return;
+                a.pause(); a.currentTime = 0;
+            }
+
+            function stopAll() {
+                for (const [k, a] of audioMap) { a.pause(); a.currentTime = 0; deactivate(k); }
+                downKeys.clear();
+            }
+            stopAllBtn.onclick = stopAll;
+
+            vol.addEventListener('input', () => {
+                const v = parseFloat(vol.value);
+                for (const a of audioMap.values()) a.volume = v;
+            });
+
+            // Pointer input
+            kbd.addEventListener('pointerdown', e => {
+                const t = e.target.closest('.white, .black'); if (!t) return;
+                const k = parseInt(t.dataset.k, 10);
+                if (!inRange(k) || downKeys.has(k)) return;
+                downKeys.add(k);
+                activate(k);
+                playKey(k);
+                t.setPointerCapture?.(e.pointerId);
+            });
+
+            window.addEventListener('pointerup', () => {
+                if (!sustain.checked) {
+                    for (const k of Array.from(downKeys)) { stopKey(k); deactivate(k); }
+                    downKeys.clear();
+                } else {
+                    for (const k of Array.from(downKeys)) deactivate(k);
+                    downKeys.clear();
+                }
+            });
+
+            // Keyboard mapping for the middle area
+            const keyMap = { 'a': 40, 'w': 41, 's': 42, 'e': 43, 'd': 44, 'f': 45, 't': 46, 'g': 47, 'y': 48, 'h': 49, 'u': 50, 'j': 51, 'k': 52 };
+
+            window.addEventListener('keydown', e => {
+                const k = keyMap[e.key?.toLowerCase?.()]; if (!k || !inRange(k)) return;
+                if (e.repeat || downKeys.has(k)) return;
+                downKeys.add(k);
+                activate(k);
+                playKey(k);
+            });
+
+            window.addEventListener('keyup', e => {
+                const k = keyMap[e.key?.toLowerCase?.()]; if (!k || !inRange(k)) return;
+                downKeys.delete(k);
+                if (!sustain.checked) { stopKey(k); }
+                deactivate(k);
+            });
+        })();
+    </script>
+</body>
+
+</html>
