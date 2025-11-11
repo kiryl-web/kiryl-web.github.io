@@ -27,11 +27,11 @@
             margin: 0;
             background: var(--bg);
             color: var(--fg);
-            font-family: var(--font); 
-           height: 100%; 
+            font-family: var(--font);
+            height: 100%;
 
         }
- 
+
 
         .wrap {
             max-width: 1100px;
@@ -171,6 +171,8 @@
 
     <script>
         (function () {
+
+            document.addEventListener("contextmenu", e => e.preventDefault());
             // Visible range only
             const K_MIN = 28; // C3
             const K_MAX = 75; // B6
@@ -298,7 +300,7 @@
                 if (e.repeat || downKeys.has(k)) return;
                 downKeys.add(k);
                 activate(k);
-                playKey(k);
+                playKey(k); 4
             });
 
             window.addEventListener('keyup', e => {
@@ -307,7 +309,12 @@
                 if (!sustain.checked) { stopKey(k); }
                 deactivate(k);
             });
+
+
+
         })();
+
+
     </script>
 </body>
 

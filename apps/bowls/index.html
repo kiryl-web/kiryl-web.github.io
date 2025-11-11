@@ -34,13 +34,19 @@
             font-family: 'Times New Roman', Times, serif;
         }
 
-  
+        /* timer */
+        #timer {
+            font-size: 0.6cm;
+            margin-top: 0.6cm; 
+        }
     </style>
 </head>
 
 <body style="min-height:100vh; display:flex; justify-content:center; align-items:center; flex-direction:column;">
 
+
     <button id="startBtn">Start to play notes</button>
+    <div id="timer" aria-live="polite">00:00:00<div>
 
     <script>
         // Note list
@@ -55,6 +61,61 @@
 
         const el = (id) => document.getElementById(id);
         const setStatus = (t) => { const s = document.getElementById('status'); if (s) s.textContent = t; };
+
+        // --- timer state ---
+        const tstate = {
+            startedOnce: false,
+            running: false,
+            rafId: null,
+            baseMs: 0,          // accumulated time when paused
+            anchor: 0           // performance.now() at last resume
+        };
+
+function fmt(ms) {
+    const total = Math.floor(ms);
+
+    const h = Math.floor(total / 3600000);
+    const m = Math.floor((total % 3600000) / 60000);
+    const s = Math.floor((total % 60000) / 1000);
+    const d = Math.floor((total % 1000) / 10);   // hundredths
+
+    return (
+        String(h).padStart(2,'0') + ':' +
+        String(m).padStart(2,'0') + ':' +
+        String(s).padStart(2,'0') 
+        //+ '.' + String(d).padStart(2,'0')
+    );
+}
+
+
+        function tick() {
+            if (!tstate.running) return;
+            const now = performance.now();
+            const elapsed = tstate.baseMs + (now - tstate.anchor);
+            el('timer').textContent = fmt(elapsed);
+            tstate.rafId = requestAnimationFrame(tick);
+        }
+
+        function timerStartIfNeeded() {
+            if (!tstate.startedOnce) {
+                tstate.startedOnce = true;
+            }
+            if (!tstate.running) {
+                tstate.running = true;
+                tstate.anchor = performance.now();
+                tstate.rafId = requestAnimationFrame(tick);
+            }
+        }
+
+        function timerPause() {
+            if (!tstate.running) return;
+            tstate.running = false;
+            cancelAnimationFrame(tstate.rafId);
+            tstate.rafId = null;
+            const now = performance.now();
+            tstate.baseMs += (now - tstate.anchor);
+            el('timer').textContent = fmt(tstate.baseMs);
+        }
 
         const state = {
             pool: [],
@@ -79,8 +140,8 @@
 
         // Base wait (seconds) = slider value. Always apply ±50% jitter around it.
         function effWait() {
-            const s = el('freq');
-            const base = 1
+            const s = el('freq'); // optional slider; safe if absent
+            const base = 1;
             const factor = 0.5 + Math.random(); // uniform in [0.5, 1.5)
             return base * factor;
         }
@@ -89,9 +150,10 @@
 
         function updateWaitDisplay(val) {
             const s = el('freq');
+            if (!s) return;
             const lo = parseFloat(s.min) || 0.05, hi = parseFloat(s.max) || 2;
             const clamped = clamp(val, lo, hi);
-            el('freqVal').textContent = clamped.toFixed(2);
+            const v = el('freqVal'); if (v) v.textContent = clamped.toFixed(2);
         }
 
         function scheduleNext() {
@@ -111,6 +173,12 @@
 
             state.audio.pause();
             state.audio.src = src;
+
+            state.audio.onplay = () => {
+                // ensure timer is running while sequence is active
+                if (state.started) timerStartIfNeeded();
+            };
+
             state.audio.onended = () => {
                 state.playing = false;
                 if (state.started) scheduleNext();
@@ -130,6 +198,8 @@
             if (state.started) return;
             state.started = true;
             el('startBtn').textContent = 'Stop';
+            // start timer on first run and keep it running while sequence is active
+            timerStartIfNeeded();
             // kick off immediately; subsequent notes are scheduled
             playOne();
         }
@@ -141,6 +211,8 @@
             state.audio.pause();
             el('startBtn').textContent = 'Start to play notes';
             setStatus && setStatus('stopped');
+            // pause timer when the sound stops
+            timerPause();
         }
 
         // --- UI bindings ---
@@ -148,14 +220,17 @@
             if (state.started) stop(); else start();
         });
 
-        el('freq').addEventListener('input', () => {
-            updateWaitDisplay(parseFloat(el('freq').value));
-            if (!state.started) start();
-        });
+        const freq = el('freq');
+        if (freq) {
+            freq.addEventListener('input', () => {
+                updateWaitDisplay(parseFloat(freq.value));
+                if (!state.started) start();
+            });
+        }
 
         // Initialize
         shuffleFill();
-        updateWaitDisplay(parseFloat(el('freq').value));
+        updateWaitDisplay(freq ? parseFloat(freq.value) : 1);
     </script>
 </body>
 
