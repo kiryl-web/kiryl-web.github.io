@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Game</title>
+  <style>
+    html, body { margin:0; padding:0; height:100%; background:#0a0a2d; }
+    canvas { display:block; width:100vw; height:100vh; }
+    @font-face { font-family: ui-mono; src: local("Consolas"), local("Menlo"); }
+  </style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<script>
+(() => {
+  const canvas = document.getElementById("stage");
+  const ctx = canvas.getContext("2d", { alpha:false });
+  ctx.imageSmoothingEnabled = false;
+
+  const heli = { img:null, x:40, y:0, w:0, h:0, dragging:false, dragOffsetY:0 };
+
+  function resizeCanvas() {
+    const w = Math.floor(window.innerWidth);
+    const h = Math.floor(window.innerHeight);
+    canvas.width = w; canvas.height = h;
+    canvas.style.width = w + "px"; canvas.style.height = h + "px";
+    ctx.setTransform(1,0,0,1,0,0);
+    if (heli.img) heli.y = clamp(heli.y, 0, canvas.height - heli.h);
+  }
+  window.addEventListener("resize", resizeCanvas, { passive:true });
+  resizeCanvas();
+
+  const sources = ["b1.png","b2.png","b3.png","b4.png","b5.png"];
+  const images = [];
+  let loaded = 0;
+
+  const buildings = [];
+  function randInt(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+  function clamp(v,lo,hi){ return v<lo?lo:(v>hi?hi:v); }
+
+  let boost = false;
+  let score = 0;
+  let gameOver = false;
+
+  // -------- Math generator (JS port inspired by your Kotlin) ----------
+  const MathGen = (() => {
+    function generate(range){
+      const op = randInt(0,12); // 0..12
+      if (op===0) return genAdd(range<=25?25:range);
+      if (op===1) return genSub(range<=25?25:range);
+      if (op===2) return genAdd(range);
+      if (op===3) return genSub(range);
+      if (op===4) return genAdd(range*5);
+      if (op===5) return genSub(range*5);
+      if (op===6) return genAdd(range*5);
+      if (op===7) return genSub(range*5);
+      if (op===8) return genMul(range*5);
+      if (op===9) return genDiv(range*5);
+      if (op===10) return genMul(range*5);
+      if (op===11) return genDiv(range*5);
+      return genPow(range*3 + 100);
+    }
+    function genAdd(range){
+      let a,b; do { a=randInt(1,range); b=randInt(1,range); } while (a+b>range);
+      return { text:`${a} + ${b} =`, value:a+b };
+    }
+    function genSub(range){
+      if (randInt(0,3)===0){
+        let a,b; do { a=randInt(2,range); b=randInt(2,range); } while (a-b<0);
+        return { text:`${a} - ${b} =`, value:a-b };
+      } else {
+        let a=randInt(1,range), b=randInt(1,Math.max(2,Math.floor(range/10)));
+        if (a-b<0) return genSub(range);
+        return { text:`${a} - ${b} =`, value:a-b };
+      }
+    }
+    function genMul(range){
+      if (randInt(0,3)===0){
+        const a=randInt(2,Math.max(2,Math.floor(range/10)));
+        const b=randInt(2,Math.max(2,Math.floor(range/10)));
+        const v=a*b; if (v>range) return genMul(range);
+        return { text:`${a} × ${b} =`, value:v };
+      } else {
+        const a=randInt(2,range), b=randInt(2,Math.max(2,Math.floor(range/6)));
+        const v=a*b; if (v>range) return genMul(range);
+        return { text:`${a} × ${b} =`, value:v };
+      }
+    }
+    function genDiv(range=125){
+      const b=randInt(2,Math.max(2,Math.floor(range/10)));
+      const c=randInt(1,Math.max(2,Math.floor(range/10)));
+      const a=b*c;
+      return { text:`${a} ÷ ${b} =`, value:c };
+    }
+    function genPow(range=401){
+      const a=randInt(2,Math.max(3,Math.floor(range/10)));
+      const b=(randInt(0,1)===0) ? randInt(2,3) : 2;
+      const v = Math.pow(a,b); if (v>range) return genPow(range);
+      const exp = b===2?"²":(b===3?"³":(b===4?"⁴":"^"+b));
+      return { text:`${a}${exp} =`, value:v };
+    }
+    return { generate };
+  })();
+
+  // -------- Stripes + statements ----------
+  const stripes = [];
+  const STRIPE_W = 100;
+  const BASE_STRIPE_SPEED = 3; // px/frame before multipliers
+
+  function makeStatement(difficulty){
+    const t = MathGen.generate(difficulty);
+    // 50% chance to lie. If lying, offset answer a little.
+    const lie = Math.random()<0.5;
+    let shown = t.value;
+    if (lie){
+      const delta = Math.max(1, Math.floor( (difficulty/20) ));
+      // random ± delta, avoid accidentally true
+      shown = t.value + (Math.random()<0.5 ? -delta : +delta);
+      if (shown === t.value) shown += 1;
+    }
+    return {
+      text: `${t.text} ${shown}`,
+      isTrue: shown === t.value
+    };
+  }
+
+  function spawnStripePair(){
+    const difficulty = 25 + randInt(0, score+1); // increases with score
+    const stmt = makeStatement(difficulty);
+    const x = canvas.width + STRIPE_W + randInt(0, Math.max(STRIPE_W, canvas.width>>3));
+    const speed = BASE_STRIPE_SPEED;
+    stripes.push({
+      x, w:STRIPE_W, speed,
+      statement: stmt.text,
+      truth: stmt.isTrue,
+      resolved:false  // becomes true after collision check once
+    });
+  }
+
+  // spawn cadence shortens with score
+  let framesToNextStripe = 0;
+  function scheduleNextStripe(){
+    const base = 300; // frames
+    const minv = 140;
+    const cut = Math.min(base - minv, score*6);
+    framesToNextStripe = base - cut;
+  }
+  scheduleNextStripe();
+
+  // -------- Buildings ----------
+  function spawnBuilding(){
+    if (images.length===0) return;
+    const img = images[randInt(0,images.length-1)];
+    const w = img.naturalWidth || 80;
+    const h = img.naturalHeight || 160;
+    const flip = randInt(0,1)===1;
+    const y = canvas.height - h + randInt(0,200);
+    const x = canvas.width + randInt(0, canvas.width>>2);
+    const speed = randInt(1,3);
+    buildings.push({ img, x, y, w, h, speed, flip });
+  }
+
+  let framesLeft = 0;
+  function maybeSpawnBuilding(){
+    framesLeft--;
+    if (framesLeft<=0){
+      spawnBuilding();
+      framesLeft = randInt(10,100);
+    }
+  }
+
+  window.addEventListener("keydown", e => { if (e.key==="ArrowRight") boost=true; });
+  window.addEventListener("keyup",   e => { if (e.key==="ArrowRight") boost=false; });
+
+  // -------- Collision ----------
+  function rectsOverlap(ax,ay,aw,ah,bx,by,bw,bh){
+    return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+  }
+
+  // -------- Rendering ----------
+  function renderBackground(){
+    ctx.fillStyle = "#0a0a2d";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+
+  function drawScore(){
+    ctx.font = "24px ui-mono, monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#b3e5ff";
+    ctx.fillText(`Score: ${score}`, 12, 8);
+  }
+
+  function drawGameOver(){
+    ctx.font = "bold 48px ui-mono, monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffb3b3";
+    ctx.fillText("Game Over", canvas.width/2, canvas.height/2 - 40);
+    ctx.font = "28px ui-mono, monospace";
+    ctx.fillStyle = "#cde7ff";
+    ctx.fillText(`Final score: ${score}`, canvas.width/2, canvas.height/2 + 10);
+  }
+
+  function renderFrame(){
+    renderBackground();
+
+    // Speed multiplier from score and boost
+    const scoreFactor = 1 + Math.min(2.5, score*0.06); // caps at ×3.5
+    const boostFactor = boost ? 5 : 1;
+    const totalFactor = scoreFactor * boostFactor;
+
+    // Buildings update
+    for (let i = buildings.length-1; i>=0; i--){
+      const b = buildings[i];
+      b.x -= b.speed * totalFactor;
+      if (b.x + b.w < 0) buildings.splice(i,1);
+    }
+    buildings.sort((a,b) => a.speed - b.speed);
+    for (const b of buildings){
+      if (b.flip){
+        ctx.save(); ctx.scale(-1,1);
+        ctx.drawImage(b.img, -(b.x + b.w), b.y, b.w, b.h);
+        ctx.restore();
+      } else {
+        ctx.drawImage(b.img, b.x, b.y, b.w, b.h);
+      }
+    }
+
+    // Stripes update
+    for (let i = stripes.length-1; i>=0; i--){
+      const s = stripes[i];
+      s.x -= s.speed * totalFactor;
+      // removal after leaving screen or after resolution moved past heli
+      if (s.x + s.w < -20) { stripes.splice(i,1); continue; }
+    }
+
+    // Draw stripes and handle collision resolution
+    for (const s of stripes){
+      const topY = 0, botY = canvas.height/2, fullH = canvas.height/2;
+
+      // semi-transparent panels
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = "#3cff8a"; // TRUE
+      ctx.fillRect(s.x, topY, s.w, fullH);
+      ctx.fillStyle = "#ff736a"; // FALSE
+      ctx.fillRect(s.x, botY, s.w, fullH);
+      ctx.globalAlpha = 1;
+
+      // panel outlines
+      ctx.strokeStyle = "#e5f6ff";
+      ctx.lineWidth = 5;
+      ctx.strokeRect(s.x, topY, s.w, fullH);
+      ctx.strokeRect(s.x, botY, s.w, fullH);
+
+      // labels
+      ctx.font = "bold 18px ui-mono, monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#001b2e";
+      ctx.fillText("TRUE", s.x + (s.w>>1), Math.floor(fullH/2));
+      ctx.fillText("FALSE", s.x + (s.w>>1), Math.floor(botY + fullH/2));
+
+      // statement in the middle of the screen, tied to the stripe x so it travels
+      const textX = s.x + (s.w>>1);
+      const textY = Math.floor(canvas.height/2);
+      ctx.font = "bold 32px ui-mono, monospace";
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#001b2e";
+      ctx.lineWidth = 8;
+      ctx.strokeText(s.statement, textX, textY);
+      ctx.fillText(s.statement, textX, textY);
+
+      // collision resolution once when horizontally overlapping heli
+      if (!s.resolved){
+        const overlapX = rectsOverlap(heli.x, heli.y, heli.w, heli.h, s.x, 0, s.w, canvas.height);
+        if (overlapX){
+          const heliCenterY = heli.y + (heli.h>>1);
+          const pickedTrue = heliCenterY < canvas.height/2;
+          const correct = (pickedTrue === s.truth);
+          s.resolved = true;
+          if (correct){
+            score += 1;
+            // after correct touch, push it left so it moves off quickly
+            s.x = -3000
+          } else {
+            gameOver = true;
+          }
+        }
+      }
+    }
+
+    // helicopter on top
+    if (heli.img) ctx.drawImage(heli.img, heli.x, heli.y, heli.w, heli.h);
+
+    drawScore();
+    if (gameOver) drawGameOver();
+  }
+
+  function tick(){
+    if (gameOver){ renderFrame(); return; }
+
+    // spawn logic
+    maybeSpawnBuilding();
+
+    framesToNextStripe--;
+    if (framesToNextStripe<=0){
+      spawnStripePair();
+      scheduleNextStripe();
+    }
+
+    renderFrame();
+    requestAnimationFrame(tick);
+  }
+
+  // -------- Controls: pointer vertical drag --------
+  canvas.addEventListener("pointerdown", (e) => {
+    if (!heli.img) return;
+    const cx = Math.floor(e.clientX), cy = Math.floor(e.clientY);
+    if (cx>=heli.x && cx<heli.x+heli.w && cy>=heli.y && cy<heli.y+heli.h){
+      heli.dragging = true; heli.dragOffsetY = cy - heli.y;
+      canvas.setPointerCapture(e.pointerId);
+    }
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (!heli.dragging) return;
+    const cy = Math.floor(e.clientY);
+    heli.y = clamp(cy - heli.dragOffsetY, 0, canvas.height - heli.h);
+  });
+  canvas.addEventListener("pointerup", (e) => {
+    if (heli.dragging){ heli.dragging=false; try{ canvas.releasePointerCapture(e.pointerId); }catch{} }
+  });
+  canvas.addEventListener("pointercancel", () => { heli.dragging=false; });
+
+  // keyboard vertical nudges
+  const KEY_STEP = 20;
+  window.addEventListener("keydown", (e) => {
+    if (!heli.img) return;
+    let dy = 0;
+    if (e.key==="ArrowUp") dy = -KEY_STEP;
+    else if (e.key==="ArrowDown") dy = KEY_STEP;
+    else if (e.key==="+" || (e.key==="=" && e.shiftKey)) dy = -KEY_STEP;
+    else if (e.key==="-" ) dy = KEY_STEP;
+    if (dy!==0){ e.preventDefault(); heli.y = clamp(heli.y + dy, 0, canvas.height - heli.h); }
+  });
+
+  // -------- Asset loading --------
+  sources.forEach(src => {
+    const img = new Image();
+    img.onload = () => { loaded++; maybeStart(); };
+    img.src = src; images.push(img);
+  });
+  const heliImg = new Image();
+  heliImg.onload = () => {
+    heli.img = heliImg;
+    heli.w = heliImg.naturalWidth || 96;
+    heli.h = heliImg.naturalHeight || 48;
+    heli.y = clamp((canvas.height>>1) - (heli.h>>1), 0, canvas.height - heli.h);
+    loaded++; maybeStart();
+  };
+  heliImg.src = "helicopter.png";
+
+  function maybeStart(){
+    if (loaded === sources.length + 1){
+      spawnBuilding();
+      requestAnimationFrame(tick);
+    }
+  }
+})();
+</script>
+</body>
+</html>
