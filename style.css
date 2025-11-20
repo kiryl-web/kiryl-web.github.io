@@ -1,6 +1,7 @@
 :root {
   --bg-color: white;
   --text-color: rgb(0, 0, 0);
+  --link-color: rgb(60,60,60)
 
   --font-family: Times New Roman, 'Times New Roman', Times, serif, sans-serif, Arial;
 }
@@ -9,6 +10,7 @@
   :root {
     --bg-color: rgb(0, 0, 0);
     --text-color: white;
+      --link-color: rgb(150,150,150)
   }
 }
 
@@ -85,6 +87,7 @@ ul {
 
 a {
   text-decoration: none;
+  color: var(--link-color);
 }
 
 .container {
