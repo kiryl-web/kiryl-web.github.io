@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Offline Slowed + Reverb</title>
+  <style>
+    :root {
+      --bg:#2f3439; --panel:#fff; --muted:#6c7580; --accent:#4a63ff; --accent2:#20c997;
+      --shadow:rgba(0,0,0,.25); --radius:14px; --font:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    body{margin:0;font-family:var(--font);background:var(--bg);display:flex;justify-content:center;min-height:100vh;}
+    .wrap{width:min(980px,92vw); padding:22px 0;}
+    .title{color:#fff;text-align:center;line-height:1.35;font-weight:650;letter-spacing:.2px;margin-bottom:10px;}
+    .card{background:var(--panel);border-radius:var(--radius);box-shadow:0 18px 40px var(--shadow);padding:22px;margin:14px auto;}
+    .uploadBox{border:2px dashed #bfe6ff;border-radius:var(--radius);padding:26px;text-align:center;}
+    .row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;}
+    .hint{margin-top:10px;color:var(--accent2);font-size:14px;}
+    .status{margin-top:10px;color:var(--muted);font-size:14px;min-height:18px;}
+    .sectionTitle{text-align:center;font-size:18px;color:#111;margin:2px 0 10px;font-weight:650;}
+    .sliderRow{display:grid;grid-template-columns:140px 1fr 120px;gap:12px;align-items:center;margin:10px 0;}
+    .label{font-size:14px;font-weight:650;}
+    input[type="range"]{width:100%;accent-color:var(--accent);}
+    .pill{justify-self:end;background:#eef1ff;color:#1d2b8a;border-radius:999px;padding:6px 10px;font-weight:750;font-size:13px;min-width:96px;text-align:center;}
+    .buttons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px;}
+    button{border:0;border-radius:999px;padding:10px 14px;font-weight:750;cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,.12);}
+    button.primary{background:var(--accent);color:#fff;}
+    button.secondary{background:#e9ecef;color:#111;}
+    button:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;}
+    .small{font-size:12px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.35;}
+    audio{width:min(760px, 92vw); display:block; margin:12px auto 0;}
+    .progressWrap{width:min(760px,92vw); margin:10px auto 0;}
+    progress{width:100%; height:14px;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">Slowed + Reverb (Offline Render)<br/><span style="font-weight:500;opacity:.9;">Upload → Render → Download WAV</span></div>
+
+    <div class="card">
+      <div class="uploadBox" id="dropZone">
+        <div class="row">
+          <input id="fileInput" type="file" accept="audio/*"/>
+          <button class="secondary" id="clearBtn" disabled>Clear</button>
+        </div>
+        <div class="hint">or drag it here</div>
+        <div class="status" id="fileStatus">No file loaded.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sectionTitle">Settings</div>
+
+      <div class="sliderRow">
+        <div class="label">Speed</div>
+        <input id="speed" type="range" min="10" max="100" value="87"/>
+        <div class="pill" id="speedVal">0.87x</div>
+      </div>
+
+      <div class="sliderRow">
+        <div class="label">Reverb (wet)</div>
+        <input id="reverb" type="range" min="0" max="100" value="30"/>
+        <div class="pill" id="reverbVal">0.80</div>
+      </div>
+
+      <div class="sliderRow">
+        <div class="label">Reverb time</div>
+        <input id="revTime" type="range" min="20" max="120" value="30"/>
+        <div class="pill" id="revTimeVal">6.0 s</div>
+      </div>
+
+      <div class="sliderRow">
+        <div class="label">Pre-delay</div>
+        <input id="preDelay" type="range" min="0" max="200" value="20"/>
+        <div class="pill" id="preDelayVal">20 ms</div>
+      </div>
+
+      <div class="buttons">
+        <button class="secondary" id="previewBtn" disabled>Preview original</button>
+        <button class="primary" id="renderBtn" disabled>Render processed WAV</button>
+        <button class="secondary" id="downloadBtn" disabled>Download WAV</button>
+      </div>
+
+      <div class="progressWrap">
+        <progress id="progress" value="0" max="100" style="display:none;"></progress>
+      </div>
+
+      <div class="status" id="status">Idle.</div>
+      <audio id="player" controls style="display:none;"></audio>
+
+      <div class="small">
+        Notes: This renders offline in your browser using <span style="font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;">OfflineAudioContext</span>.
+        Output is WAV (MP3 encoding is not built-in to Web Audio).
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  // UI
+  var fileInput = document.getElementById("fileInput");
+  var dropZone = document.getElementById("dropZone");
+  var fileStatus = document.getElementById("fileStatus");
+  var clearBtn = document.getElementById("clearBtn");
+  var previewBtn = document.getElementById("previewBtn");
+  var renderBtn = document.getElementById("renderBtn");
+  var downloadBtn = document.getElementById("downloadBtn");
+  var statusEl = document.getElementById("status");
+  var player = document.getElementById("player");
+  var progressEl = document.getElementById("progress");
+
+  var speedSlider = document.getElementById("speed");
+  var reverbSlider = document.getElementById("reverb");
+  var revTimeSlider = document.getElementById("revTime");
+  var preDelaySlider = document.getElementById("preDelay");
+
+  var speedVal = document.getElementById("speedVal");
+  var reverbVal = document.getElementById("reverbVal");
+  var revTimeVal = document.getElementById("revTimeVal");
+  var preDelayVal = document.getElementById("preDelayVal");
+
+  // State
+  var originalArrayBuffer = null;
+  var originalAudioBuffer = null;
+  var renderedWavBlob = null;
+  var renderedObjectUrl = null;
+  var fileNameBase = "processed";
+
+  function setStatus(s) { statusEl.textContent = s; }
+  function setProgress(p) {
+    if (p === null) { progressEl.style.display = "none"; return; }
+    progressEl.style.display = "block";
+    progressEl.value = Math.max(0, Math.min(100, p));
+  }
+
+  function updateLabels() {
+    var r = parseInt(speedSlider.value, 10) / 100;          // r = speed factor
+    var w = parseInt(reverbSlider.value, 10) / 100;         // w = wet mix
+    var t = parseInt(revTimeSlider.value, 10) / 10;         // t = seconds
+    var pd = parseInt(preDelaySlider.value, 10);            // pd = ms
+    speedVal.textContent = r.toFixed(2) + "x";
+    reverbVal.textContent = w.toFixed(2);
+    revTimeVal.textContent = t.toFixed(1) + " s";
+    preDelayVal.textContent = pd + " ms";
+  }
+  speedSlider.addEventListener("input", updateLabels);
+  reverbSlider.addEventListener("input", updateLabels);
+  revTimeSlider.addEventListener("input", updateLabels);
+  preDelaySlider.addEventListener("input", updateLabels);
+  updateLabels();
+
+  function resetAll() {
+    originalArrayBuffer = null;
+    originalAudioBuffer = null;
+    renderedWavBlob = null;
+    if (renderedObjectUrl) URL.revokeObjectURL(renderedObjectUrl);
+    renderedObjectUrl = null;
+
+    fileStatus.textContent = "No file loaded.";
+    setStatus("Idle.");
+    setProgress(null);
+
+    previewBtn.disabled = true;
+    renderBtn.disabled = true;
+    downloadBtn.disabled = true;
+    clearBtn.disabled = true;
+
+    player.style.display = "none";
+    player.pause();
+    player.removeAttribute("src");
+  }
+
+  clearBtn.addEventListener("click", function () {
+    fileInput.value = "";
+    resetAll();
+  });
+
+  async function decodeToAudioBuffer(arrayBuffer) {
+    // Use a normal AudioContext only for decoding.
+    var ac = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+      var audioBuffer = await ac.decodeAudioData(arrayBuffer.slice(0));
+      return audioBuffer;
+    } finally {
+      try { await ac.close(); } catch (e) {}
+    }
+  }
+
+  function getBaseName(fileName) {
+    var idx = fileName.lastIndexOf(".");
+    if (idx <= 0) return fileName || "audio";
+    return fileName.substring(0, idx);
+  }
+
+  // Drag & drop
+  dropZone.addEventListener("dragover", function (e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  });
+  dropZone.addEventListener("drop", function (e) {
+    e.preventDefault();
+    if (!e.dataTransfer.files || e.dataTransfer.files.length === 0) return;
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener("change", function () {
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    handleFile(fileInput.files[0]);
+  });
+
+  async function handleFile(file) {
+    resetAll();
+    clearBtn.disabled = false;
+
+    fileNameBase = getBaseName(file.name);
+    fileStatus.textContent = "Loading: " + file.name;
+
+    setStatus("Reading file...");
+    setProgress(5);
+
+    try {
+      var ab = await file.arrayBuffer();
+      originalArrayBuffer = ab;
+
+      setStatus("Decoding audio...");
+      setProgress(15);
+
+      originalAudioBuffer = await decodeToAudioBuffer(ab);
+
+      fileStatus.textContent =
+        "Loaded: " + file.name + " (" +
+        originalAudioBuffer.numberOfChannels + "ch, " +
+        Math.round(originalAudioBuffer.sampleRate) + " Hz, " +
+        originalAudioBuffer.duration.toFixed(2) + " s)";
+
+      previewBtn.disabled = false;
+      renderBtn.disabled = false;
+
+      setStatus("Ready.");
+      setProgress(null);
+    } catch (err) {
+      console.error(err);
+      fileStatus.textContent = "Failed to load file.";
+      setStatus("Error: " + (err && err.message ? err.message : String(err)));
+      setProgress(null);
+    }
+  }
+
+  previewBtn.addEventListener("click", function () {
+    if (!originalArrayBuffer) return;
+    // Preview original file directly
+    var blob = new Blob([originalArrayBuffer], { type: "audio/*" });
+    var url = URL.createObjectURL(blob);
+    player.style.display = "block";
+    player.src = url;
+    player.play().catch(function(){});
+    setStatus("Previewing original.");
+  });
+
+  function makeImpulseResponse(sampleRate, seconds, decay, preDelaySeconds) {
+    // IR is generated noise with exponential decay (simple but workable).
+    // sampleRate = samples/sec
+    // seconds = IR length
+    // decay = decay curve factor
+    // preDelaySeconds = initial silence before IR starts
+    var length = Math.max(1, Math.floor(sampleRate * seconds));
+    var preDelaySamples = Math.max(0, Math.floor(sampleRate * preDelaySeconds));
+    var totalLength = length + preDelaySamples;
+
+    var irBuffer = new AudioBuffer({ length: totalLength, sampleRate: sampleRate, numberOfChannels: 2 });
+
+    for (var ch = 0; ch < irBuffer.numberOfChannels; ch++) {
+      var data = irBuffer.getChannelData(ch);
+      // pre-delay silence
+      for (var i = 0; i < preDelaySamples; i++) data[i] = 0;
+
+      for (var i2 = 0; i2 < length; i2++) {
+        var n = (Math.random() * 2) - 1; // noise in [-1,1]
+        var t = i2 / length;            // t in [0,1]
+        var env = Math.pow(1 - t, decay);
+        data[preDelaySamples + i2] = n * env;
+      }
+    }
+    return irBuffer;
+  }
+
+  async function renderProcessedWav() {
+    if (!originalAudioBuffer) return;
+
+    renderedWavBlob = null;
+    if (renderedObjectUrl) URL.revokeObjectURL(renderedObjectUrl);
+    renderedObjectUrl = null;
+    downloadBtn.disabled = true;
+
+    var r = parseInt(speedSlider.value, 10) / 100;    // r = speed factor
+    var w = parseInt(reverbSlider.value, 10) / 100;   // w = wet mix
+    var t = parseInt(revTimeSlider.value, 10) / 10;   // t = IR seconds
+    var pdMs = parseInt(preDelaySlider.value, 10);    // pdMs = pre-delay ms
+    var pd = pdMs / 1000;
+
+    // Offline length: slowed audio becomes longer ~ duration / r
+    var srcDur = originalAudioBuffer.duration;
+    var outDur = srcDur / r;
+
+    var sampleRate = originalAudioBuffer.sampleRate;
+    var outFrames = Math.ceil(outDur * sampleRate);
+
+    setStatus("Preparing offline render...");
+    setProgress(20);
+
+    var offline = new OfflineAudioContext(originalAudioBuffer.numberOfChannels, outFrames, sampleRate);
+
+    // Source
+    var src = offline.createBufferSource();
+    src.buffer = originalAudioBuffer;
+    src.playbackRate.value = r; // This is the "slow" but rendered to a new buffer.
+
+    // Dry/Wet
+    var dryGain = offline.createGain();
+    var wetGain = offline.createGain();
+
+    // dryGain = 1 - w, wetGain = w
+    dryGain.gain.value = 1 - w;
+    wetGain.gain.value = w;
+
+    // Reverb via convolution
+    var convolver = offline.createConvolver();
+    convolver.buffer = makeImpulseResponse(sampleRate, t, 3.0, pd);
+
+    // Routing:
+    // src -> dryGain -> destination
+    // src -> convolver -> wetGain -> destination
+    src.connect(dryGain);
+    dryGain.connect(offline.destination);
+
+    src.connect(convolver);
+    convolver.connect(wetGain);
+    wetGain.connect(offline.destination);
+
+    // Start and render
+    src.start(0);
+
+    setStatus("Rendering (offline)...");
+    setProgress(35);
+
+    var renderedBuffer = await offline.startRendering();
+
+    setStatus("Encoding WAV...");
+    setProgress(85);
+
+    renderedWavBlob = audioBufferToWavBlob(renderedBuffer);
+
+    renderedObjectUrl = URL.createObjectURL(renderedWavBlob);
+    player.style.display = "block";
+    player.src = renderedObjectUrl;
+
+    downloadBtn.disabled = false;
+
+    setStatus("Done. Preview the processed audio, then download WAV.");
+    setProgress(null);
+  }
+
+  renderBtn.addEventListener("click", function () {
+    if (!originalAudioBuffer) return;
+    renderBtn.disabled = true;
+    setStatus("Starting...");
+    renderProcessedWav()
+      .catch(function (err) {
+        console.error(err);
+        setStatus("Error: " + (err && err.message ? err.message : String(err)));
+        setProgress(null);
+      })
+      .finally(function () {
+        renderBtn.disabled = false;
+      });
+  });
+
+  downloadBtn.addEventListener("click", function () {
+    if (!renderedWavBlob) return;
+    var a = document.createElement("a");
+    a.href = renderedObjectUrl;
+    a.download = fileNameBase + "_slowed_reverb.wav";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+
+  // WAV encoding (PCM 16-bit)
+  function audioBufferToWavBlob(buffer) {
+    // buffer: AudioBuffer
+    // Convert float PCM [-1,1] to 16-bit PCM and wrap in RIFF/WAV
+    var numChannels = buffer.numberOfChannels;
+    var sampleRate = buffer.sampleRate;
+    var numFrames = buffer.length;
+
+    var bytesPerSample = 2; // 16-bit
+    var blockAlign = numChannels * bytesPerSample;
+    var byteRate = sampleRate * blockAlign;
+    var dataSize = numFrames * blockAlign;
+
+    var headerSize = 44;
+    var totalSize = headerSize + dataSize;
+    var arrayBuffer = new ArrayBuffer(totalSize);
+    var view = new DataView(arrayBuffer);
+
+    function writeString(offset, str) {
+      for (var i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+    }
+
+    // RIFF header
+    writeString(0, "RIFF");
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(8, "WAVE");
+
+    // fmt chunk
+    writeString(12, "fmt ");
+    view.setUint32(16, 16, true);          // PCM chunk size
+    view.setUint16(20, 1, true);           // format = PCM
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, 16, true);          // bits per sample
+
+    // data chunk
+    writeString(36, "data");
+    view.setUint32(40, dataSize, true);
+
+    // Interleave channels
+    var offset = 44;
+    var channels = [];
+    for (var ch = 0; ch < numChannels; ch++) channels.push(buffer.getChannelData(ch));
+
+    for (var iFrame = 0; iFrame < numFrames; iFrame++) {
+      for (var ch2 = 0; ch2 < numChannels; ch2++) {
+        var s = channels[ch2][iFrame];
+        // clamp
+        if (s > 1) s = 1;
+        if (s < -1) s = -1;
+        // float -> int16
+        var int16 = s < 0 ? Math.round(s * 32768) : Math.round(s * 32767);
+        view.setInt16(offset, int16, true);
+        offset += 2;
+      }
+    }
+
+    return new Blob([arrayBuffer], { type: "audio/wav" });
+  }
+
+  // init
+  resetAll();
+})();
+</script>
+</body>
+</html>
