@@ -1,5 +1,30 @@
+   <li>
+        <a href="blog_176.html" class="blue">
+          <strong>Autumn holidays</strong>
+          <span>18. October 2025, 1200 words</span>
+        </a>
+      </li>
 
-    <div class="card">
+    </ol>
+
+    <ol class="blog-post" reversed start="173">
+
+      <li>
+        <a href="blog_173.html" class="blue">
+          <strong>A collection of new goals</strong>
+          <span>9. August 2025, 1300 words</span>
+        </a>
+      </li>
+
+    </ol>
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ <div class="card">
       <div id="expandable" class="collapsed">
         <div class="card-content">
 
