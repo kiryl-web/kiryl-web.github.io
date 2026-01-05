@@ -1,0 +1,588 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Green PPG + Peak Markers + BPM</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 12px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+    .col { display: flex; flex-direction: column; gap: 10px; }
+    video, canvas { border: 1px solid #ccc; border-radius: 8px; background: #000; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; max-width: 560px; }
+    button { padding: 10px 14px; font-size: 16px; }
+    label { display: block; margin-top: 10px; }
+    input[type="range"] { width: 100%; }
+    .big { font-size: 28px; font-weight: bold; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .small { font-size: 12px; color: #333; line-height: 1.3; }
+  </style>
+</head>
+<body>
+  <h2>Green Channel PPG (ROI) + Peak Markers</h2>
+
+  <div class="row">
+    <div class="col">
+      <div class="mono">Camera (overlay shows ROI)</div>
+      <video id="cameraVideo" width="320" height="240" autoplay playsinline muted></video>
+      <canvas id="overlayCanvas" width="320" height="240"></canvas>
+    </div>
+
+    <div class="col">
+      <div class="mono">Green plot: raw (dotted), filtered (solid), peaks (circles)</div>
+      <canvas id="plotCanvas" width="640" height="280"></canvas>
+    </div>
+
+    <div class="card">
+      <div>BPM:</div>
+      <div class="big" id="bpmText">--</div>
+
+      <button id="startButton">Start Camera</button>
+      <button id="stopButton" disabled>Stop</button>
+
+      <label>ROI size (center square): <span id="roiSizeText" class="mono"></span> px</label>
+      <input id="roiSizeRange" type="range" min="20" max="180" value="80" />
+
+      <label>Plot window: <span id="plotSecondsText" class="mono"></span> s</label>
+      <input id="plotSecondsRange" type="range" min="5" max="30" value="12" />
+
+      <label>Plot gain (filtered): <span id="plotGainText" class="mono"></span>x</label>
+      <input id="plotGainRange" type="range" min="1" max="200" value="60" />
+
+      <label>Peak threshold (relative): <span id="peakThresholdText" class="mono"></span></label>
+      <input id="peakThresholdRange" type="range" min="2" max="60" value="18" />
+
+      <label>PPG window seconds (for BPM): <span id="ppgWindowSecondsText" class="mono"></span> s</label>
+      <input id="ppgWindowSecondsRange" type="range" min="6" max="25" value="12" />
+
+      <label>Min peak distance: <span id="minPeakDistText" class="mono"></span> ms</label>
+      <input id="minPeakDistRange" type="range" min="200" max="800" value="320" />
+
+      <div class="small" style="margin-top:10px">
+        What counts as a peak:
+        <ul style="margin-top:6px">
+          <li>Filtered slope changes from + to − (local maximum)</li>
+          <li>Peak height &gt; threshold = (relative slider) × stddev(filtered)</li>
+          <li>Peak is at least “Min peak distance” after previous peak</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="workCanvas" width="320" height="240" style="display:none;"></canvas>
+
+  <script>
+    // ----------------------------
+    // Elements
+    // ----------------------------
+    var cameraVideo = document.getElementById("cameraVideo");
+
+    var overlayCanvas = document.getElementById("overlayCanvas");
+    var overlayCtx = overlayCanvas.getContext("2d");
+
+    var plotCanvas = document.getElementById("plotCanvas");
+    var plotCtx = plotCanvas.getContext("2d");
+
+    var workCanvas = document.getElementById("workCanvas");
+    var workCtx = workCanvas.getContext("2d");
+
+    var bpmText = document.getElementById("bpmText");
+    var startButton = document.getElementById("startButton");
+    var stopButton = document.getElementById("stopButton");
+
+    var roiSizeRange = document.getElementById("roiSizeRange");
+    var roiSizeText = document.getElementById("roiSizeText");
+
+    var plotSecondsRange = document.getElementById("plotSecondsRange");
+    var plotSecondsText = document.getElementById("plotSecondsText");
+
+    var plotGainRange = document.getElementById("plotGainRange");
+    var plotGainText = document.getElementById("plotGainText");
+
+    var peakThresholdRange = document.getElementById("peakThresholdRange");
+    var peakThresholdText = document.getElementById("peakThresholdText");
+
+    var ppgWindowSecondsRange = document.getElementById("ppgWindowSecondsRange");
+    var ppgWindowSecondsText = document.getElementById("ppgWindowSecondsText");
+
+    var minPeakDistRange = document.getElementById("minPeakDistRange");
+    var minPeakDistText = document.getElementById("minPeakDistText");
+
+    function setUiTexts() {
+      roiSizeText.textContent = roiSizeRange.value;
+      plotSecondsText.textContent = plotSecondsRange.value;
+      plotGainText.textContent = plotGainRange.value;
+      peakThresholdText.textContent = (parseInt(peakThresholdRange.value, 10) / 100.0).toFixed(2);
+      ppgWindowSecondsText.textContent = ppgWindowSecondsRange.value;
+      minPeakDistText.textContent = minPeakDistRange.value;
+    }
+
+    roiSizeRange.oninput = setUiTexts;
+    plotSecondsRange.oninput = setUiTexts;
+    plotGainRange.oninput = setUiTexts;
+    peakThresholdRange.oninput = setUiTexts;
+    ppgWindowSecondsRange.oninput = setUiTexts;
+    minPeakDistRange.oninput = setUiTexts;
+    setUiTexts();
+
+    // ----------------------------
+    // State
+    // ----------------------------
+    var cameraStream = null;
+    var running = false;
+
+    // samples: { tMs, gRaw, gFiltered }
+    var samples = [];
+
+    // peaks: store indices into samples[] (so we can mark exact points on the plot)
+    var peakSampleIndices = [];
+
+    // Filter queues for green (band-pass approximation)
+    var longMaQueue = [];
+    var shortMaQueue = [];
+    var longMaSum = 0;
+    var shortMaSum = 0;
+
+    // Peak detection state
+    var lastFilteredValue = 0;
+    var lastSlope = 0;
+    var lastPeakTimeMs = 0;
+
+    function resetAll() {
+      samples = [];
+      peakSampleIndices = [];
+
+      longMaQueue = [];
+      shortMaQueue = [];
+      longMaSum = 0;
+      shortMaSum = 0;
+
+      lastFilteredValue = 0;
+      lastSlope = 0;
+      lastPeakTimeMs = 0;
+
+      bpmText.textContent = "--";
+      overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      plotCtx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
+    }
+
+    // ----------------------------
+    // Helpers: moving average
+    // ----------------------------
+    function pushMovingAverage(queue, sumValue, newValue, maxLen) {
+      queue.push(newValue);
+      sumValue += newValue;
+      if (queue.length > maxLen) {
+        sumValue -= queue.shift();
+      }
+      return sumValue;
+    }
+
+    function meanOfQueue(queue, sumValue) {
+      if (queue.length === 0) return 0;
+      return sumValue / queue.length;
+    }
+
+    // ----------------------------
+    // Compute mean green in center ROI + draw ROI box
+    // ----------------------------
+    function computeMeanGreenInCenterRoiAndDrawBox() {
+      var w = workCanvas.width;
+      var h = workCanvas.height;
+
+      var roiSizePx = parseInt(roiSizeRange.value, 10);
+      var half = Math.floor(roiSizePx / 2);
+
+      var cx = Math.floor(w / 2);
+      var cy = Math.floor(h / 2);
+
+      var x0 = Math.max(0, cx - half);
+      var y0 = Math.max(0, cy - half);
+      var x1 = Math.min(w, cx + half);
+      var y1 = Math.min(h, cy + half);
+
+      var roiW = x1 - x0;
+      var roiH = y1 - y0;
+
+      // draw frame to work canvas
+      workCtx.drawImage(cameraVideo, 0, 0, w, h);
+
+      var imageData = workCtx.getImageData(x0, y0, roiW, roiH);
+      var data = imageData.data;
+
+      var sumG = 0;
+      var count = roiW * roiH;
+
+      for (var i = 0; i < data.length; i += 4) {
+        sumG += data[i + 1];
+      }
+
+      var meanG = sumG / count;
+
+      // overlay view
+      overlayCtx.drawImage(cameraVideo, 0, 0, overlayCanvas.width, overlayCanvas.height);
+      overlayCtx.lineWidth = 2;
+      overlayCtx.strokeStyle = "lime";
+      overlayCtx.strokeRect(x0, y0, roiW, roiH);
+
+      return meanG;
+    }
+
+    // ----------------------------
+    // Filtering + peak detection
+    //
+    // Filter:
+    // - highpass: g - MA_long(g)
+    // - lowpass: MA_short(highpass)
+    //
+    // Peak:
+    // - slope from + to - (local max)
+    // - height > thresholdValue
+    // - refractory period >= minPeakDistanceMs
+    //
+    // Letters:
+    // - g: raw mean green
+    // - f: filtered value
+    // - σ: stddev of filtered values in window
+    // - thresholdValue = k * σ  (k = relative slider)
+    // ----------------------------
+    function addSampleAndDetectPeak(tMs, gRaw) {
+      var approxFps = 30;
+      var longMaLen = Math.floor(approxFps * 1.2);
+      var shortMaLen = Math.floor(approxFps * 0.20);
+
+      longMaSum = pushMovingAverage(longMaQueue, longMaSum, gRaw, longMaLen);
+      var maLong = meanOfQueue(longMaQueue, longMaSum);
+
+      var highPassed = gRaw - maLong;
+
+      shortMaSum = pushMovingAverage(shortMaQueue, shortMaSum, highPassed, shortMaLen);
+      var gFiltered = meanOfQueue(shortMaQueue, shortMaSum);
+
+      samples.push({ tMs: tMs, gRaw: gRaw, gFiltered: gFiltered });
+
+      // Keep samples only within plot window
+      var plotSeconds = parseInt(plotSecondsRange.value, 10);
+      var plotMs = plotSeconds * 1000;
+      while (samples.length > 0 && (tMs - samples[0].tMs) > plotMs) {
+        // If we drop samples from front, peak indices must shift
+        samples.shift();
+        for (var i = 0; i < peakSampleIndices.length; i++) {
+          peakSampleIndices[i] -= 1;
+        }
+        while (peakSampleIndices.length > 0 && peakSampleIndices[0] < 0) {
+          peakSampleIndices.shift();
+        }
+      }
+
+      // Compute threshold from stddev of filtered values in current samples
+      var sigma = computeStdDevFiltered(samples);
+      var k = parseInt(peakThresholdRange.value, 10) / 100.0;
+      var thresholdValue = k * sigma;
+
+      var slope = gFiltered - lastFilteredValue;
+
+      var isLocalMax = (lastSlope > 0) && (slope < 0);
+      var isAboveThreshold = (lastFilteredValue > thresholdValue);
+
+      var minPeakDistanceMs = parseInt(minPeakDistRange.value, 10);
+
+      if (isLocalMax && isAboveThreshold && (tMs - lastPeakTimeMs) >= minPeakDistanceMs) {
+        lastPeakTimeMs = tMs;
+
+        // mark peak at the previous sample (where the local max was)
+        var peakIndex = samples.length - 2;
+        if (peakIndex >= 0) {
+          peakSampleIndices.push(peakIndex);
+        }
+
+        updateBpmFromPeaks();
+      }
+
+      lastSlope = slope;
+      lastFilteredValue = gFiltered;
+    }
+
+    function computeStdDevFiltered(sampleList) {
+      if (sampleList.length < 10) return 0;
+
+      var sum = 0;
+      for (var i = 0; i < sampleList.length; i++) sum += sampleList[i].gFiltered;
+      var mean = sum / sampleList.length;
+
+      var sq = 0;
+      for (var j = 0; j < sampleList.length; j++) {
+        var d = sampleList[j].gFiltered - mean;
+        sq += d * d;
+      }
+      return Math.sqrt(sq / sampleList.length);
+    }
+
+    // ----------------------------
+    // BPM from peak indices
+    // BPM = 60 / mean(Δt)
+    //
+    // Letters:
+    // - t_i: peak times (seconds)
+    // - Δt_i = t_i - t_{i-1}
+    // - BPM = 60 / mean(Δt_i)
+    // ----------------------------
+    function updateBpmFromPeaks() {
+      // Convert peak indices into times
+      if (peakSampleIndices.length < 3) return;
+
+      // Use a PPG window separate from plot window if desired:
+      var ppgWindowSeconds = parseInt(ppgWindowSecondsRange.value, 10);
+      var nowMs = samples[samples.length - 1].tMs;
+      var ppgWindowMs = ppgWindowSeconds * 1000;
+
+      var peakTimesMs = [];
+      for (var i = 0; i < peakSampleIndices.length; i++) {
+        var idx = peakSampleIndices[i];
+        if (idx >= 0 && idx < samples.length) {
+          var tMs = samples[idx].tMs;
+          if ((nowMs - tMs) <= ppgWindowMs) {
+            peakTimesMs.push(tMs);
+          }
+        }
+      }
+
+      if (peakTimesMs.length < 3) return;
+
+      var intervals = [];
+      for (var j = 1; j < peakTimesMs.length; j++) {
+        intervals.push((peakTimesMs[j] - peakTimesMs[j - 1]) / 1000.0);
+      }
+
+      // plausible HR: 40..200 bpm => 1.50..0.30 s
+      var cleaned = [];
+      for (var k = 0; k < intervals.length; k++) {
+        var dt = intervals[k];
+        if (dt >= 0.30 && dt <= 1.50) cleaned.push(dt);
+      }
+
+      if (cleaned.length < 2) return;
+
+      var sum = 0;
+      for (var m = 0; m < cleaned.length; m++) sum += cleaned[m];
+      var meanDt = sum / cleaned.length;
+
+      var bpm = 60.0 / meanDt;
+      bpmText.textContent = Math.round(bpm).toString();
+    }
+
+    // ----------------------------
+    // Plot:
+    // - raw green (baseline removed) drawn as dotted
+    // - filtered green drawn as solid
+    // - peaks marked as circles on filtered curve
+    // - auto-scale based on filtered curve (with gain)
+    // ----------------------------
+    function drawPlot() {
+      var w = plotCanvas.width;
+      var h = plotCanvas.height;
+
+      plotCtx.clearRect(0, 0, w, h);
+      plotCtx.fillStyle = "white";
+      plotCtx.fillRect(0, 0, w, h);
+
+      var xLeft = 55;
+      var xRight = w - 10;
+      var yTop = 12;
+      var yBot = h - 32;
+
+      plotCtx.strokeStyle = "#bbb";
+      plotCtx.lineWidth = 1;
+      plotCtx.strokeRect(xLeft, yTop, xRight - xLeft, yBot - yTop);
+
+      plotCtx.fillStyle = "#111";
+      plotCtx.font = "12px Arial";
+
+      if (samples.length < 3) {
+        plotCtx.fillText("Need samples...", xLeft + 10, yTop + 18);
+        return;
+      }
+
+      var tStart = samples[0].tMs;
+      var tEnd = samples[samples.length - 1].tMs;
+      var dt = Math.max(1, tEnd - tStart);
+
+      function xFromTime(tMs) {
+        return xLeft + (tMs - tStart) * (xRight - xLeft) / dt;
+      }
+
+      // Build a baseline-removed raw signal for visualization:
+      // rawAC = gRaw - mean(gRaw over window)
+      var rawMean = 0;
+      for (var i = 0; i < samples.length; i++) rawMean += samples[i].gRaw;
+      rawMean = rawMean / samples.length;
+
+      var gain = parseInt(plotGainRange.value, 10);
+
+      // Auto-scale using filtered (gain applied) and rawAC (gain applied but smaller)
+      var minV = 1e9;
+      var maxV = -1e9;
+
+      for (var i = 0; i < samples.length; i++) {
+        var rawAC = (samples[i].gRaw - rawMean) * (gain * 0.25);
+        var f = samples[i].gFiltered * gain;
+        if (rawAC < minV) minV = rawAC;
+        if (rawAC > maxV) maxV = rawAC;
+        if (f < minV) minV = f;
+        if (f > maxV) maxV = f;
+      }
+
+      var range = maxV - minV;
+      if (range < 0.6) { minV = -0.3; maxV = 0.3; range = maxV - minV; }
+
+      function yFromValue(v) {
+        return yBot - (v - minV) * (yBot - yTop) / range;
+      }
+
+      // Draw rawAC dotted line
+      plotCtx.strokeStyle = "#2a7";
+      plotCtx.lineWidth = 1;
+      plotCtx.setLineDash([3, 3]);
+      plotCtx.beginPath();
+      for (var i = 0; i < samples.length; i++) {
+        var s = samples[i];
+        var rawAC = (s.gRaw - rawMean) * (gain * 0.25);
+        var x = xFromTime(s.tMs);
+        var y = yFromValue(rawAC);
+        if (i === 0) plotCtx.moveTo(x, y);
+        else plotCtx.lineTo(x, y);
+      }
+      plotCtx.stroke();
+      plotCtx.setLineDash([]);
+
+      // Draw filtered solid line
+      plotCtx.strokeStyle = "green";
+      plotCtx.lineWidth = 2;
+      plotCtx.beginPath();
+      for (var i = 0; i < samples.length; i++) {
+        var s2 = samples[i];
+        var f2 = s2.gFiltered * gain;
+        var x2 = xFromTime(s2.tMs);
+        var y2 = yFromValue(f2);
+        if (i === 0) plotCtx.moveTo(x2, y2);
+        else plotCtx.lineTo(x2, y2);
+      }
+      plotCtx.stroke();
+
+      // Zero line
+      plotCtx.strokeStyle = "#888";
+      plotCtx.lineWidth = 1;
+      plotCtx.setLineDash([4, 4]);
+      plotCtx.beginPath();
+      plotCtx.moveTo(xLeft, yFromValue(0));
+      plotCtx.lineTo(xRight, yFromValue(0));
+      plotCtx.stroke();
+      plotCtx.setLineDash([]);
+
+      // Mark peaks on filtered curve
+      plotCtx.fillStyle = "black";
+      for (var p = 0; p < peakSampleIndices.length; p++) {
+        var idx = peakSampleIndices[p];
+        if (idx >= 0 && idx < samples.length) {
+          var sp = samples[idx];
+          var xp = xFromTime(sp.tMs);
+          var yp = yFromValue(sp.gFiltered * gain);
+
+          plotCtx.beginPath();
+          plotCtx.arc(xp, yp, 4, 0, Math.PI * 2);
+          plotCtx.fill();
+        }
+      }
+
+      // Title + scale info
+      plotCtx.fillStyle = "#111";
+      plotCtx.fillText("Raw green (dotted, baseline removed) + Filtered green (solid) + Peaks (●)", xLeft + 10, yTop + 16);
+      plotCtx.fillText("gain x" + gain, xRight - 65, yTop + 16);
+
+      // Min/max labels
+      plotCtx.fillText(maxV.toFixed(2), 5, yTop + 12);
+      plotCtx.fillText(minV.toFixed(2), 5, yBot);
+
+      // Show last values
+      var last = samples[samples.length - 1];
+      var lastRawAC = (last.gRaw - rawMean) * (gain * 0.25);
+      var lastF = last.gFiltered * gain;
+      plotCtx.fillText("rawAC=" + lastRawAC.toFixed(2) + "  filtered=" + lastF.toFixed(2) + "  peaks=" + peakSampleIndices.length,
+                       xLeft + 10, h - 10);
+    }
+
+    // ----------------------------
+    // Main loop
+    // ----------------------------
+    function loop() {
+      if (!running) return;
+
+      if (cameraVideo.readyState >= 2) {
+        var nowMs = performance.now();
+        var meanG = computeMeanGreenInCenterRoiAndDrawBox();
+
+        addSampleAndDetectPeak(nowMs, meanG);
+        drawPlot();
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    // ----------------------------
+    // Start / Stop camera
+    // ----------------------------
+    async function startCamera() {
+      resetAll();
+
+      var constraints = {
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+        audio: false
+      };
+
+      cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+      cameraVideo.srcObject = cameraStream;
+
+      workCanvas.width = 320;
+      workCanvas.height = 240;
+
+      overlayCanvas.width = 320;
+      overlayCanvas.height = 240;
+
+      running = true;
+      startButton.disabled = true;
+      stopButton.disabled = false;
+
+      requestAnimationFrame(loop);
+    }
+
+    function stopCamera() {
+      running = false;
+      startButton.disabled = false;
+      stopButton.disabled = true;
+
+      if (cameraStream) {
+        var tracks = cameraStream.getTracks();
+        for (var i = 0; i < tracks.length; i++) tracks[i].stop();
+      }
+      cameraStream = null;
+    }
+
+    startButton.onclick = function() {
+      startCamera().catch(function(err) {
+        console.log(err);
+        bpmText.textContent = "ERR";
+        startButton.disabled = false;
+        stopButton.disabled = true;
+      });
+    };
+
+    stopButton.onclick = function() {
+      stopCamera();
+    };
+  </script>
+</body>
+</html>
