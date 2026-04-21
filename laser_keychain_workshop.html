@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -260,7 +261,7 @@
         </div>
 
         <div class="footerNote">
-          The exported image is a 512 × 512 PNG with a circular design, a hanging hole cutout near the top, black lines, and a white background.
+          The exported image is a 512 × 512 PNG with red cut lines, black engraved lines, and a white background.
         </div>
       </div>
     </div>
@@ -271,9 +272,12 @@
     const white = 255;
     const black = 0;
 
-    //TODO
-    const hangingHoleRadius = 0;
-    const hangingHoleCenterY = 44;
+    const cutRedRgb = { r: 255, g: 0, b: 0 };
+    const cutRedCss = 'rgb(255, 0, 0)';
+    const guideLineWidth = 4;
+
+    const hangingHoleRadius = 17 * 2;
+    const hangingHoleCenterY = 17 * 5;
     const fixedLineThickness = 2;
 
     const imageInput = document.getElementById('imageInput');
@@ -324,15 +328,20 @@
     }
 
     function drawCircleGuide(ctx) {
+      const outerRadius = outputSize / 2 - guideLineWidth / 2;
+
       ctx.save();
-      ctx.strokeStyle = '#dddddd';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = cutRedCss;
+      ctx.lineWidth = guideLineWidth;
+
       ctx.beginPath();
-      ctx.arc(outputSize / 2, outputSize / 2, outputSize / 2 - 1, 0, Math.PI * 2);
+      ctx.arc(outputSize / 2, outputSize / 2, outerRadius, 0, Math.PI * 2);
       ctx.stroke();
+
       ctx.beginPath();
       ctx.arc(outputSize / 2, hangingHoleCenterY, hangingHoleRadius, 0, Math.PI * 2);
       ctx.stroke();
+
       ctx.restore();
     }
 
@@ -364,6 +373,8 @@
       sourceCtx.clip();
       sourceCtx.drawImage(loadedImage, drawX, drawY, drawWidth, drawHeight);
       sourceCtx.restore();
+
+      drawCircleGuide(sourceCtx);
     }
 
     function getGrayArrayFromCanvas(ctx) {
@@ -486,7 +497,6 @@
       return filtered;
     }
 
-
     function thickenMask(mask, thickness) {
       if (thickness <= 1) {
         return mask.slice();
@@ -546,11 +556,15 @@
       return result;
     }
 
+    function isOnCircleStroke(distance, circleRadius, lineWidth) {
+      return Math.abs(distance - circleRadius) <= lineWidth / 2;
+    }
+
     function drawMaskToOutputCanvas(mask) {
       const imageData = outputCtx.createImageData(outputSize, outputSize);
       const cx = outputSize / 2;
       const cy = outputSize / 2;
-      const radius = outputSize / 2;
+      const outerRadius = outputSize / 2 - guideLineWidth / 2;
       const holeCx = outputSize / 2;
       const holeCy = hangingHoleCenterY;
 
@@ -558,21 +572,37 @@
         for (let x = 0; x < outputSize; x += 1) {
           const pixelIndex = y * outputSize + x;
           const dataIndex = pixelIndex * 4;
+
           const dx = x + 0.5 - cx;
           const dy = y + 0.5 - cy;
-          const insideCircle = Math.sqrt(dx * dx + dy * dy) <= radius;
+          const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
+
           const holeDx = x + 0.5 - holeCx;
           const holeDy = y + 0.5 - holeCy;
-          const insideHole = Math.sqrt(holeDx * holeDx + holeDy * holeDy) <= hangingHoleRadius;
+          const distanceFromHoleCenter = Math.sqrt(holeDx * holeDx + holeDy * holeDy);
 
-          let color = white;
-          if (insideCircle && !insideHole && mask[pixelIndex] === 1) {
-            color = black;
+          const onOuterCutLine = isOnCircleStroke(distanceFromCenter, outerRadius, guideLineWidth);
+          const onHoleCutLine = isOnCircleStroke(distanceFromHoleCenter, hangingHoleRadius, guideLineWidth);
+
+          let r = white;
+          let g = white;
+          let b = white;
+
+if (mask[pixelIndex] === 1 && !onOuterCutLine && !onHoleCutLine) {
+  r = black;
+  g = black;
+  b = black;
+}
+
+          if (onOuterCutLine || onHoleCutLine) {
+            r = cutRedRgb.r;
+            g = cutRedRgb.g;
+            b = cutRedRgb.b;
           }
 
-          imageData.data[dataIndex] = color;
-          imageData.data[dataIndex + 1] = color;
-          imageData.data[dataIndex + 2] = color;
+          imageData.data[dataIndex] = r;
+          imageData.data[dataIndex + 1] = g;
+          imageData.data[dataIndex + 2] = b;
           imageData.data[dataIndex + 3] = 255;
         }
       }
