@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laser Keychain Workshop</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f5f5;
+      --panel: #ffffff;
+      --border: #d0d0d0;
+      --text: #111111;
+      --muted: #666666;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+    }
+
+    p {
+      line-height: 1.5;
+      margin: 0 0 16px 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    .controls {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    input[type="file"] {
+      width: 100%;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid #222;
+      background: #222;
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #fff;
+      color: #111;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .buttonRow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .previewGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .canvasCard {
+      display: grid;
+      gap: 10px;
+    }
+
+    .canvasBox {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      display: grid;
+      place-items: center;
+      min-height: 320px;
+    }
+
+    canvas {
+      width: min(100%, 320px);
+      height: auto;
+      image-rendering: pixelated;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+    }
+
+    .footerNote {
+      margin-top: 18px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .valueRow {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .valueTag {
+      min-width: 48px;
+      text-align: right;
+      color: var(--muted);
+      font-weight: normal;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Laser Keychain Workshop</h1>
+    <p>
+      Upload any image, crop it to a circular 512 px design, detect edges, and aggressively remove most of them so only a sparse black-on-white result remains.
+      Export the final design as a PNG for laser engraving.
+    </p>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="controls">
+          <div>
+            <label for="imageInput">Image</label>
+            <input id="imageInput" type="file" accept="image/*" />
+            <div class="small">Each person can choose a different photo or drawing.</div>
+          </div>
+
+          <div>
+            <div class="valueRow">
+              <label for="zoomSlider">Zoom</label>
+              <div id="zoomValue" class="valueTag">1.00</div>
+            </div>
+            <input id="zoomSlider" type="range" min="1" max="3" step="0.01" value="1" />
+            <div class="small">Scales the image inside the circle.</div>
+          </div>
+
+          <div>
+            <div class="valueRow">
+              <label for="offsetXSlider">Horizontal shift</label>
+              <div id="offsetXValue" class="valueTag">0</div>
+            </div>
+            <input id="offsetXSlider" type="range" min="-200" max="200" step="1" value="0" />
+          </div>
+
+          <div>
+            <div class="valueRow">
+              <label for="offsetYSlider">Vertical shift</label>
+              <div id="offsetYValue" class="valueTag">0</div>
+            </div>
+            <input id="offsetYSlider" type="range" min="-200" max="200" step="1" value="0" />
+          </div>
+
+          <div>
+            <div class="valueRow">
+              <label for="blurSlider">Pre-blur</label>
+              <div id="blurValue" class="valueTag">1</div>
+            </div>
+            <input id="blurSlider" type="range" min="0" max="4" step="1" value="1" />
+            <div class="small">Small blur before edge detection reduces noise.</div>
+          </div>
+
+          <div>
+            <div class="valueRow">
+              <label for="edgeThresholdSlider">Edge threshold</label>
+              <div id="edgeThresholdValue" class="valueTag">160</div>
+            </div>
+            <input id="edgeThresholdSlider" type="range" min="20" max="400" step="1" value="160" />
+            <div class="small">Higher values keep fewer edges.</div>
+          </div>
+
+          <div>
+            <div class="valueRow">
+              <label for="neighborSlider">Minimum black neighbors</label>
+              <div id="neighborValue" class="valueTag">2</div>
+            </div>
+            <input id="neighborSlider" type="range" min="0" max="5" step="1" value="2" />
+            <div class="small">Removes isolated and weak edge fragments.</div>
+          </div>
+
+          <div class="buttonRow">
+            <button id="downloadButton" disabled>Download PNG</button>
+            <button id="resetButton" class="secondary">Reset controls</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="previewGrid">
+          <div class="canvasCard">
+            <strong>Source inside 512 px circle</strong>
+            <div class="canvasBox">
+              <canvas id="sourceCanvas" width="512" height="512"></canvas>
+            </div>
+          </div>
+
+          <div class="canvasCard">
+            <strong>Processed output</strong>
+            <div class="canvasBox">
+              <canvas id="outputCanvas" width="512" height="512"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="footerNote">
+          The exported image is a 512 × 512 PNG with a circular design, a hanging hole cutout near the top, black lines, and a white background.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const outputSize = 512;
+    const white = 255;
+    const black = 0;
+
+    const hangingHoleRadius = 22;
+    const hangingHoleCenterY = 44;
+    const fixedLineThickness = 2;
+
+    const imageInput = document.getElementById('imageInput');
+    const zoomSlider = document.getElementById('zoomSlider');
+    const offsetXSlider = document.getElementById('offsetXSlider');
+    const offsetYSlider = document.getElementById('offsetYSlider');
+    const blurSlider = document.getElementById('blurSlider');
+    const edgeThresholdSlider = document.getElementById('edgeThresholdSlider');
+    const neighborSlider = document.getElementById('neighborSlider');
+    const downloadButton = document.getElementById('downloadButton');
+    const resetButton = document.getElementById('resetButton');
+
+    const zoomValue = document.getElementById('zoomValue');
+    const offsetXValue = document.getElementById('offsetXValue');
+    const offsetYValue = document.getElementById('offsetYValue');
+    const blurValue = document.getElementById('blurValue');
+    const edgeThresholdValue = document.getElementById('edgeThresholdValue');
+    const neighborValue = document.getElementById('neighborValue');
+
+    const sourceCanvas = document.getElementById('sourceCanvas');
+    const outputCanvas = document.getElementById('outputCanvas');
+    const sourceCtx = sourceCanvas.getContext('2d');
+    const outputCtx = outputCanvas.getContext('2d');
+
+    let loadedImage = null;
+
+    function updateValueLabels() {
+      zoomValue.textContent = Number(zoomSlider.value).toFixed(2);
+      offsetXValue.textContent = offsetXSlider.value;
+      offsetYValue.textContent = offsetYSlider.value;
+      blurValue.textContent = blurSlider.value;
+      edgeThresholdValue.textContent = edgeThresholdSlider.value;
+      neighborValue.textContent = neighborSlider.value;
+    }
+
+    function drawEmptyCanvases() {
+      sourceCtx.clearRect(0, 0, outputSize, outputSize);
+      outputCtx.clearRect(0, 0, outputSize, outputSize);
+      fillWhite(sourceCtx);
+      fillWhite(outputCtx);
+      drawCircleGuide(sourceCtx);
+      drawCircleGuide(outputCtx);
+    }
+
+    function fillWhite(ctx) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, outputSize, outputSize);
+    }
+
+    function drawCircleGuide(ctx) {
+      ctx.save();
+      ctx.strokeStyle = '#dddddd';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(outputSize / 2, outputSize / 2, outputSize / 2 - 1, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(outputSize / 2, hangingHoleCenterY, hangingHoleRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawImageIntoSourceCanvas() {
+      fillWhite(sourceCtx);
+
+      if (!loadedImage) {
+        drawCircleGuide(sourceCtx);
+        return;
+      }
+
+      const zoom = Number(zoomSlider.value);
+      const offsetX = Number(offsetXSlider.value);
+      const offsetY = Number(offsetYSlider.value);
+
+      const imageWidth = loadedImage.width;
+      const imageHeight = loadedImage.height;
+      const coverScale = Math.max(outputSize / imageWidth, outputSize / imageHeight) * zoom;
+      const drawWidth = imageWidth * coverScale;
+      const drawHeight = imageHeight * coverScale;
+      const baseX = (outputSize - drawWidth) / 2;
+      const baseY = (outputSize - drawHeight) / 2;
+      const drawX = baseX + offsetX;
+      const drawY = baseY + offsetY;
+
+      sourceCtx.save();
+      sourceCtx.beginPath();
+      sourceCtx.arc(outputSize / 2, outputSize / 2, outputSize / 2, 0, Math.PI * 2);
+      sourceCtx.clip();
+      sourceCtx.drawImage(loadedImage, drawX, drawY, drawWidth, drawHeight);
+      sourceCtx.restore();
+    }
+
+    function getGrayArrayFromCanvas(ctx) {
+      const imageData = ctx.getImageData(0, 0, outputSize, outputSize);
+      const gray = new Uint8ClampedArray(outputSize * outputSize);
+
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        const pixelIndex = i / 4;
+        const r = imageData.data[i];
+        const g = imageData.data[i + 1];
+        const b = imageData.data[i + 2];
+        gray[pixelIndex] = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+      }
+
+      return gray;
+    }
+
+    function applyBoxBlur(gray, radius) {
+      if (radius <= 0) {
+        return gray.slice();
+      }
+
+      let current = gray.slice();
+
+      for (let pass = 0; pass < radius; pass += 1) {
+        const temp = new Uint8ClampedArray(outputSize * outputSize);
+
+        for (let y = 0; y < outputSize; y += 1) {
+          for (let x = 0; x < outputSize; x += 1) {
+            let sum = 0;
+            let count = 0;
+
+            for (let dy = -1; dy <= 1; dy += 1) {
+              for (let dx = -1; dx <= 1; dx += 1) {
+                const nx = x + dx;
+                const ny = y + dy;
+                if (nx >= 0 && nx < outputSize && ny >= 0 && ny < outputSize) {
+                  sum += current[ny * outputSize + nx];
+                  count += 1;
+                }
+              }
+            }
+
+            temp[y * outputSize + x] = Math.round(sum / count);
+          }
+        }
+
+        current = temp;
+      }
+
+      return current;
+    }
+
+    function detectEdges(gray, threshold) {
+      const edges = new Uint8Array(outputSize * outputSize);
+
+      for (let y = 1; y < outputSize - 1; y += 1) {
+        for (let x = 1; x < outputSize - 1; x += 1) {
+          const a = gray[(y - 1) * outputSize + (x - 1)];
+          const b = gray[(y - 1) * outputSize + x];
+          const c = gray[(y - 1) * outputSize + (x + 1)];
+          const d = gray[y * outputSize + (x - 1)];
+          const f = gray[y * outputSize + (x + 1)];
+          const g = gray[(y + 1) * outputSize + (x - 1)];
+          const h = gray[(y + 1) * outputSize + x];
+          const i = gray[(y + 1) * outputSize + (x + 1)];
+
+          const gx = -a + c - 2 * d + 2 * f - g + i;
+          const gy = -a - 2 * b - c + g + 2 * h + i;
+          const magnitude = Math.sqrt(gx * gx + gy * gy);
+
+          if (magnitude >= threshold) {
+            edges[y * outputSize + x] = 1;
+          }
+        }
+      }
+
+      return edges;
+    }
+
+    function countBlackNeighbors(mask, x, y) {
+      let count = 0;
+
+      for (let dy = -1; dy <= 1; dy += 1) {
+        for (let dx = -1; dx <= 1; dx += 1) {
+          if (dx === 0 && dy === 0) {
+            continue;
+          }
+
+          const nx = x + dx;
+          const ny = y + dy;
+          if (nx >= 0 && nx < outputSize && ny >= 0 && ny < outputSize) {
+            count += mask[ny * outputSize + nx];
+          }
+        }
+      }
+
+      return count;
+    }
+
+    function filterByNeighborCount(mask, minimumNeighbors) {
+      if (minimumNeighbors <= 0) {
+        return mask.slice();
+      }
+
+      const filtered = new Uint8Array(outputSize * outputSize);
+
+      for (let y = 1; y < outputSize - 1; y += 1) {
+        for (let x = 1; x < outputSize - 1; x += 1) {
+          const index = y * outputSize + x;
+          if (mask[index] === 1) {
+            const neighbors = countBlackNeighbors(mask, x, y);
+            if (neighbors >= minimumNeighbors) {
+              filtered[index] = 1;
+            }
+          }
+        }
+      }
+
+      return filtered;
+    }
+
+
+    function thickenMask(mask, thickness) {
+      if (thickness <= 1) {
+        return mask.slice();
+      }
+
+      let current = mask.slice();
+      const radius = thickness - 1;
+
+      for (let pass = 0; pass < radius; pass += 1) {
+        const next = current.slice();
+
+        for (let y = 1; y < outputSize - 1; y += 1) {
+          for (let x = 1; x < outputSize - 1; x += 1) {
+            const index = y * outputSize + x;
+            if (current[index] === 1) {
+              for (let dy = -1; dy <= 1; dy += 1) {
+                for (let dx = -1; dx <= 1; dx += 1) {
+                  const nx = x + dx;
+                  const ny = y + dy;
+                  next[ny * outputSize + nx] = 1;
+                }
+              }
+            }
+          }
+        }
+
+        current = next;
+      }
+
+      return current;
+    }
+
+    function applyCircularMask(mask) {
+      const cx = outputSize / 2;
+      const cy = outputSize / 2;
+      const radius = outputSize / 2;
+      const holeCx = outputSize / 2;
+      const holeCy = hangingHoleCenterY;
+      const result = mask.slice();
+
+      for (let y = 0; y < outputSize; y += 1) {
+        for (let x = 0; x < outputSize; x += 1) {
+          const dx = x + 0.5 - cx;
+          const dy = y + 0.5 - cy;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          const holeDx = x + 0.5 - holeCx;
+          const holeDy = y + 0.5 - holeCy;
+          const holeDistance = Math.sqrt(holeDx * holeDx + holeDy * holeDy);
+
+          if (distance > radius || holeDistance <= hangingHoleRadius) {
+            result[y * outputSize + x] = 0;
+          }
+        }
+      }
+
+      return result;
+    }
+
+    function drawMaskToOutputCanvas(mask) {
+      const imageData = outputCtx.createImageData(outputSize, outputSize);
+      const cx = outputSize / 2;
+      const cy = outputSize / 2;
+      const radius = outputSize / 2;
+      const holeCx = outputSize / 2;
+      const holeCy = hangingHoleCenterY;
+
+      for (let y = 0; y < outputSize; y += 1) {
+        for (let x = 0; x < outputSize; x += 1) {
+          const pixelIndex = y * outputSize + x;
+          const dataIndex = pixelIndex * 4;
+          const dx = x + 0.5 - cx;
+          const dy = y + 0.5 - cy;
+          const insideCircle = Math.sqrt(dx * dx + dy * dy) <= radius;
+          const holeDx = x + 0.5 - holeCx;
+          const holeDy = y + 0.5 - holeCy;
+          const insideHole = Math.sqrt(holeDx * holeDx + holeDy * holeDy) <= hangingHoleRadius;
+
+          let color = white;
+          if (insideCircle && !insideHole && mask[pixelIndex] === 1) {
+            color = black;
+          }
+
+          imageData.data[dataIndex] = color;
+          imageData.data[dataIndex + 1] = color;
+          imageData.data[dataIndex + 2] = color;
+          imageData.data[dataIndex + 3] = 255;
+        }
+      }
+
+      outputCtx.putImageData(imageData, 0, 0);
+    }
+
+    function processImage() {
+      drawImageIntoSourceCanvas();
+
+      if (!loadedImage) {
+        fillWhite(outputCtx);
+        drawCircleGuide(outputCtx);
+        downloadButton.disabled = true;
+        return;
+      }
+
+      const blurRadius = Number(blurSlider.value);
+      const edgeThreshold = Number(edgeThresholdSlider.value);
+      const minimumNeighbors = Number(neighborSlider.value);
+
+      const gray = getGrayArrayFromCanvas(sourceCtx);
+      const blurredGray = applyBoxBlur(gray, blurRadius);
+      let edgeMask = detectEdges(blurredGray, edgeThreshold);
+      edgeMask = filterByNeighborCount(edgeMask, minimumNeighbors);
+      edgeMask = thickenMask(edgeMask, fixedLineThickness);
+      edgeMask = applyCircularMask(edgeMask);
+
+      drawMaskToOutputCanvas(edgeMask);
+      downloadButton.disabled = false;
+    }
+
+    function resetControls() {
+      zoomSlider.value = '1';
+      offsetXSlider.value = '0';
+      offsetYSlider.value = '0';
+      blurSlider.value = '1';
+      edgeThresholdSlider.value = '160';
+      neighborSlider.value = '2';
+      updateValueLabels();
+      processImage();
+    }
+
+    function loadSelectedFile(file) {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        const image = new Image();
+        image.onload = function () {
+          loadedImage = image;
+          processImage();
+        };
+        image.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    imageInput.addEventListener('change', function () {
+      const file = imageInput.files && imageInput.files[0];
+      if (file) {
+        loadSelectedFile(file);
+      }
+    });
+
+    [
+      zoomSlider,
+      offsetXSlider,
+      offsetYSlider,
+      blurSlider,
+      edgeThresholdSlider,
+      neighborSlider
+    ].forEach(function (input) {
+      input.addEventListener('input', function () {
+        updateValueLabels();
+        processImage();
+      });
+    });
+
+    downloadButton.addEventListener('click', function () {
+      const link = document.createElement('a');
+      link.href = outputCanvas.toDataURL('image/png');
+      link.download = 'keychain-output-512px.png';
+      link.click();
+    });
+
+    resetButton.addEventListener('click', function () {
+      resetControls();
+    });
+
+    updateValueLabels();
+    drawEmptyCanvases();
+  </script>
+</body>
+</html>
