@@ -239,10 +239,7 @@
       "id": "dresden-hbf_flixbus_to_gleis-1-2",
       "title": "FlixBus → Gleis 1/2",
       "startLocations": [
-        "FlixBus",
-        "Fernbus",
-        "Bayrische Straße",
-        "Busbahnhof"
+        "FlixBus"
       ],
       "endLocations": [
         "1",
@@ -300,11 +297,7 @@
       "id": "dresden-hbf_hauptbahnhof-nord_to_gleis-13-14",
       "title": "Hauptbahnhof Nord → Gleis 13/14",
       "startLocations": [
-        "Hauptbahnhof Nord",
-        "Tram 3",
-        "Tram 4",
-        "Tram 7",
-        "Tram 11"
+        "Hauptbahnhof Nord"
       ],
       "endLocations": [
         "13",
