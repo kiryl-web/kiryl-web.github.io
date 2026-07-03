@@ -10,8 +10,7 @@
         "14"
       ],
       "endLocations": [
-        "Ersatzverkehr",
-        "Steig 8"
+        "Replacement service"
       ],
       "direction": "forward",
       "estimatedDistanceM": 615.0,
@@ -174,9 +173,7 @@
       ],
       "endLocations": [
         "Tram 7",
-        "Tram 10",
-        "Hauptbahnhof Nord",
-        "Wiener Platz"
+        "Tram 10"
       ],
       "direction": "forward",
       "imageFolder": "2",
