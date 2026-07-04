@@ -1,0 +1,492 @@
+{
+  "schemaVersion": 1,
+  "station": "Dresden Hbf",
+  "routes": [
+    {
+      "id": "dresden-hbf_13-14_to_ersatzverkehr-s1-s2",
+      "title": "Gleis 13/14 → Ersatzverkehr S1/S2",
+      "startLocations": [
+        "Rail 13",
+        "Rail 14"
+      ],
+      "endLocations": [
+        "Replacement service"
+      ],
+      "direction": "forward",
+      "estimatedDistanceM": 615.0,
+      "steps": [
+        {
+          "index": 0,
+          "image": "0/0.JPG",
+          "distanceM": 25.0,
+          "description": "Go down the stairs ahead."
+        },
+        {
+          "index": 1,
+          "image": "0/1.JPG",
+          "distanceM": 18.0,
+          "description": "Turn right into the concourse."
+        },
+        {
+          "index": 2,
+          "image": "0/2.JPG",
+          "distanceM": 55.0,
+          "description": "Go straight through the corridor."
+        },
+        {
+          "index": 3,
+          "image": "0/3.JPG",
+          "distanceM": 20.0,
+          "description": "Enter the large main hall."
+        },
+        {
+          "index": 4,
+          "image": "0/4.JPG",
+          "distanceM": 40.0,
+          "description": "Cross the hall straight ahead."
+        },
+        {
+          "index": 5,
+          "image": "0/5.JPG",
+          "distanceM": 35.0,
+          "description": "Continue past the info cube."
+        },
+        {
+          "index": 6,
+          "image": "0/6.JPG",
+          "distanceM": 15.0,
+          "description": "Use the Ersatzverkehr passage."
+        },
+        {
+          "index": 7,
+          "image": "0/7.JPG",
+          "distanceM": 65.0,
+          "description": "Go straight through the corridor."
+        },
+        {
+          "index": 8,
+          "image": "0/8.JPG",
+          "distanceM": 45.0,
+          "description": "Continue toward Bayrische Straße."
+        },
+        {
+          "index": 9,
+          "image": "0/9.JPG",
+          "distanceM": 20.0,
+          "description": "Outside, turn left."
+        },
+        {
+          "index": 10,
+          "image": "0/10.JPG",
+          "distanceM": 70.0,
+          "description": "Walk along the station façade."
+        },
+        {
+          "index": 11,
+          "image": "0/11.JPG",
+          "distanceM": 60.0,
+          "description": "Continue toward the junction."
+        },
+        {
+          "index": 12,
+          "image": "0/12.JPG",
+          "distanceM": 55.0,
+          "description": "Stay straight to the crossing."
+        },
+        {
+          "index": 13,
+          "image": "0/13.JPG",
+          "distanceM": 35.0,
+          "description": "Turn right and cross carefully."
+        },
+        {
+          "index": 14,
+          "image": "0/14.JPG",
+          "distanceM": 45.0,
+          "description": "Turn left across the next crossing."
+        },
+        {
+          "index": 15,
+          "image": "0/15.JPG",
+          "distanceM": 90.0,
+          "description": "Follow the bus lane pavement."
+        },
+        {
+          "index": 16,
+          "image": "0/16.JPG",
+          "distanceM": 0.0,
+          "description": "Arrive at Ersatzverkehr S1/S2."
+        }
+      ],
+      "imageFolder": "0"
+    },
+    {
+      "id": "dresden-hbf_platform-9_to_lidl",
+      "title": "Rail 8/9 → Lidl",
+      "startLocations": [
+        "Rail 9",
+        "Rail 8"
+      ],
+      "endLocations": [
+        "Lidl (Groceries)"
+      ],
+      "direction": "forward",
+      "imageFolder": "1",
+      "estimatedDistanceM": 135.0,
+      "steps": [
+        {
+          "index": 0,
+          "image": "1/0.JPG",
+          "distanceM": 20.0,
+          "description": "Go straight off platform 9."
+        },
+        {
+          "index": 1,
+          "image": "1/1.JPG",
+          "distanceM": 12.0,
+          "description": "Turn left near Burger King."
+        },
+        {
+          "index": 2,
+          "image": "1/2.JPG",
+          "distanceM": 35.0,
+          "description": "Go straight through the hall."
+        },
+        {
+          "index": 3,
+          "image": "1/3.JPG",
+          "distanceM": 35.0,
+          "description": "Continue past Starbucks."
+        },
+        {
+          "index": 4,
+          "image": "1/4.JPG",
+          "distanceM": 28.0,
+          "description": "Turn left to Lidl"
+        }
+      ]
+    },
+    {
+      "id": "dresden-hbf_platform-9_to_tram-7-10",
+      "title": "Gleis 9 → Tram 7/10",
+      "startLocations": [
+        "Rail 9",
+        "Rail 8"
+      ],
+      "endLocations": [
+        "Tram 7",
+        "Tram 10"
+      ],
+      "direction": "forward",
+      "imageFolder": "2",
+      "estimatedDistanceM": 195.0,
+      "steps": [
+        {
+          "index": 0,
+          "image": "2/0.JPG",
+          "distanceM": 35.0,
+          "description": "Go straight off platform 9."
+        },
+        {
+          "index": 1,
+          "image": "2/1.JPG",
+          "distanceM": 18.0,
+          "description": "Turn left near Burger King."
+        },
+        {
+          "index": 2,
+          "image": "2/2.JPG",
+          "distanceM": 30.0,
+          "description": "Go straight through the hall."
+        },
+        {
+          "index": 3,
+          "image": "2/3.JPG",
+          "distanceM": 25.0,
+          "description": "Continue past Starbucks."
+        },
+        {
+          "index": 4,
+          "image": "2/4.JPG",
+          "distanceM": 22.0,
+          "description": "Walk straight to the exit."
+        },
+        {
+          "index": 5,
+          "image": "2/5.JPG",
+          "distanceM": 25.0,
+          "description": "Leave toward the tram stop."
+        },
+        {
+          "index": 6,
+          "image": "2/6.JPG",
+          "distanceM": 25.0,
+          "description": "Continue to the tram platforms."
+        },
+        {
+          "index": 7,
+          "image": "2/7.JPG",
+          "distanceM": 15.0,
+          "description": "Wait here for tram 7 or 10."
+        },
+        {
+          "index": 8,
+          "image": "2/8.JPG",
+          "distanceM": 0.0,
+          "description": "Cross street for other directions."
+        }
+      ]
+    },
+    {
+      "id": "dresden-hbf_flixbus_to_gleis-1-2",
+      "title": "FlixBus → Gleis 1/2",
+      "startLocations": [
+        "Bayrische Str. (FlixBus)"
+      ],
+      "endLocations": [
+        "Rail 1",
+        "Rail 2"
+      ],
+      "direction": "forward",
+      "imageFolder": "3",
+      "estimatedDistanceM": 128.0,
+      "steps": [
+        {
+          "index": 0,
+          "image": "3/0.JPG",
+          "distanceM": 35.0,
+          "description": "Cross toward the station entrance."
+        },
+        {
+          "index": 1,
+          "image": "3/1.JPG",
+          "distanceM": 25.0,
+          "description": "Continue to the DB doors."
+        },
+        {
+          "index": 2,
+          "image": "3/2.JPG",
+          "distanceM": 8.0,
+          "description": "Enter through the DB doors."
+        },
+        {
+          "index": 3,
+          "image": "3/3.JPG",
+          "distanceM": 18.0,
+          "description": "Turn left inside the corridor."
+        },
+        {
+          "index": 4,
+          "image": "3/4.JPG",
+          "distanceM": 17.0,
+          "description": "Turn left toward Gleis 1/2."
+        },
+        {
+          "index": 5,
+          "image": "3/5.JPG",
+          "distanceM": 25.0,
+          "description": "Go upstairs to the platforms."
+        },
+        {
+          "index": 6,
+          "image": "3/6.JPG",
+          "distanceM": 0.0,
+          "description": "Arrive at Gleis 1 or 2."
+        }
+      ]
+    },
+    {
+      "id": "dresden-hbf_hauptbahnhof-nord_to_gleis-13-14",
+      "title": "Hauptbahnhof Nord → Gleis 13/14",
+      "startLocations": [
+        "Hauptbahnhof Nord (tram station)"
+      ],
+      "endLocations": [
+        "Rail 13",
+        "Rail 14"
+      ],
+      "direction": "forward",
+      "imageFolder": "4",
+      "estimatedDistanceM": 245.0,
+      "steps": [
+        {
+          "index": 0,
+          "image": "4/0.JPG",
+          "distanceM": 25.0,
+          "description": "Leave the tram stop to the right."
+        },
+        {
+          "index": 1,
+          "image": "4/1.JPG",
+          "distanceM": 25.0,
+          "description": "Follow the path across the square."
+        },
+        {
+          "index": 2,
+          "image": "4/2.JPG",
+          "distanceM": 35.0,
+          "description": "Continue toward the station."
+        },
+        {
+          "index": 3,
+          "image": "4/3.JPG",
+          "distanceM": 30.0,
+          "description": "Keep walking across Wiener Platz."
+        },
+        {
+          "index": 4,
+          "image": "4/4.JPG",
+          "distanceM": 30.0,
+          "description": "Head toward the main facade."
+        },
+        {
+          "index": 5,
+          "image": "4/5.JPG",
+          "distanceM": 25.0,
+          "description": "Cross toward the entrance."
+        },
+        {
+          "index": 6,
+          "image": "4/6.JPG",
+          "distanceM": 20.0,
+          "description": "Go straight to the main doors."
+        },
+        {
+          "index": 7,
+          "image": "4/7.JPG",
+          "distanceM": 20.0,
+          "description": "Enter and keep to the right."
+        },
+        {
+          "index": 8,
+          "image": "4/8.JPG",
+          "distanceM": 20.0,
+          "description": "Turn right at dean & david."
+        },
+        {
+          "index": 9,
+          "image": "4/9.JPG",
+          "distanceM": 15.0,
+          "description": "Go up the stairs to 13/14."
+        },
+        {
+          "index": 10,
+          "image": "4/10.JPG",
+          "distanceM": 0.0,
+          "description": "Arrive at platforms 13 and 14."
+        }
+      ]
+    },
+        {
+      "id": "dresden-hbf_mock_data",
+      "title": "",
+      "startLocations": [
+        "Rail 1",
+        "Rail 2",
+        "Rail 3",
+        "Rail 4",
+        "Rail 5",
+        "Rail 6",
+        "Rail 7",
+        "Rail 8",
+        "Rail 9",
+        "Rail 10",
+        "Rail 11",
+        "Rail 12",
+        "Rail 13",
+        "Rail 14",
+        "Main Entrance (Tram 3 & 8)",
+        "Side Entrance (Wiener Platz)"
+      ],
+      "endLocations": [
+        "Rail 1",
+        "Rail 2",
+        "Rail 3",
+        "Rail 4",
+        "Rail 5",
+        "Rail 6",
+        "Rail 7",
+        "Rail 8",
+        "Rail 9",
+        "Rail 10",
+        "Rail 11",
+        "Rail 12",
+        "Rail 13",
+        "Rail 14",
+        "Main Entrance (Tram 3 & 8)",
+        "Side Entrance (Wiener Platz)"
+      ],
+      "direction": "forward",
+      "imageFolder": "4",
+      "estimatedDistanceM": 245.0,
+      "steps": [
+        {
+          "index": 0,
+          "image": "4/0.JPG",
+          "distanceM": 25.0,
+          "description": "Leave the tram stop to the right."
+        },
+        {
+          "index": 1,
+          "image": "4/1.JPG",
+          "distanceM": 25.0,
+          "description": "Follow the path across the square."
+        },
+        {
+          "index": 2,
+          "image": "4/2.JPG",
+          "distanceM": 35.0,
+          "description": "Continue toward the station."
+        },
+        {
+          "index": 3,
+          "image": "4/3.JPG",
+          "distanceM": 30.0,
+          "description": "Keep walking across Wiener Platz."
+        },
+        {
+          "index": 4,
+          "image": "4/4.JPG",
+          "distanceM": 30.0,
+          "description": "Head toward the main facade."
+        },
+        {
+          "index": 5,
+          "image": "4/5.JPG",
+          "distanceM": 25.0,
+          "description": "Cross toward the entrance."
+        },
+        {
+          "index": 6,
+          "image": "4/6.JPG",
+          "distanceM": 20.0,
+          "description": "Go straight to the main doors."
+        },
+        {
+          "index": 7,
+          "image": "4/7.JPG",
+          "distanceM": 20.0,
+          "description": "Enter and keep to the right."
+        },
+        {
+          "index": 8,
+          "image": "4/8.JPG",
+          "distanceM": 20.0,
+          "description": "Turn right at dean & david."
+        },
+        {
+          "index": 9,
+          "image": "4/9.JPG",
+          "distanceM": 15.0,
+          "description": "Go up the stairs to 13/14."
+        },
+        {
+          "index": 10,
+          "image": "4/10.JPG",
+          "distanceM": 0.0,
+          "description": "Arrive at platforms 13 and 14."
+        }
+      ]
+    }
+  ]
+}

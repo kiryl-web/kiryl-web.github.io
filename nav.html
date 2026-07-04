@@ -15,7 +15,7 @@
       --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       --radius: 16px;
     }
-  
+
     * { box-sizing: border-box; }
 
     body {
@@ -43,8 +43,6 @@
       letter-spacing: -0.02em;
     }
 
-    .fields { display: grid; gap: 10px; }
-
     label {
       display: block;
       margin: 0 0 5px;
@@ -55,9 +53,18 @@
       letter-spacing: 0.05em;
     }
 
-    .inputWrap { position: relative; }
+    .fields {
+      display: grid;
+      gap: 10px;
+    }
 
-    input {
+    .fieldWrap {
+      position: relative;
+    }
+
+    select,
+    input,
+    .selectButton {
       width: 100%;
       min-height: 46px;
       border: 1px solid var(--lineColor);
@@ -66,11 +73,41 @@
       color: var(--textColor);
       font: inherit;
       font-size: 1rem;
-      padding: 0 48px 0 13px;
+      padding: 0 42px 0 13px;
       outline: none;
     }
 
-    input:focus { border-color: #999999; background: #ffffff; }
+    select:focus,
+    input:focus,
+    .selectButton:focus {
+      border-color: #999999;
+      background: #ffffff;
+    }
+
+    select {
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #777777 50%),
+        linear-gradient(135deg, #777777 50%, transparent 50%);
+      background-position:
+        calc(100% - 22px) 20px,
+        calc(100% - 15px) 20px;
+      background-size: 7px 7px, 7px 7px;
+      background-repeat: no-repeat;
+    }
+
+    .selectButton {
+      display: block;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    .selectButton.isEmpty {
+      color: var(--mutedTextColor);
+    }
 
     .clearButton {
       display: none;
@@ -87,44 +124,36 @@
       font-size: 1.35rem;
       line-height: 1;
       padding: 0;
+      cursor: pointer;
     }
 
     .clearButton.isVisible { display: block; }
-
     .clearButton:active { background: var(--lineColor); }
 
-    .suggestions {
-      display: none;
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: calc(100% + 5px);
-      z-index: 30;
-      max-height: 210px;
-      overflow: auto;
+    main { padding: 14px 0 40px; }
+
+    .routeInfo,
+    .hintBox {
+      margin: 0 5mm 14px;
+      padding: 11px 12px;
       border: 1px solid var(--lineColor);
-      border-radius: 13px;
+      border-radius: 14px;
       background: #ffffff;
-      box-shadow: var(--shadow);
+      color: var(--mutedTextColor);
+      font-size: 0.92rem;
     }
 
-    .suggestions.isVisible { display: block; }
-
-    .suggestionButton {
+    .routeInfo strong,
+    .hintBox strong {
       display: block;
-      width: 100%;
-      border: 0;
-      border-bottom: 1px solid var(--lineColor);
-      background: #ffffff;
+      margin-bottom: 3px;
       color: var(--textColor);
-      font: inherit;
-      padding: 12px 13px;
-      text-align: left;
+      font-size: 1rem;
     }
 
-    .suggestionButton:last-child { border-bottom: 0; }
-
-    .suggestionButton:active { background: var(--fieldBackground); }
+    .routeLine {
+      margin-top: 4px;
+    }
 
     .viewSwitch {
       display: grid;
@@ -142,49 +171,13 @@
       font: inherit;
       font-size: 0.92rem;
       font-weight: 650;
+      cursor: pointer;
     }
 
     .viewButton.isActive {
       background: var(--textColor);
       color: #ffffff;
       border-color: var(--textColor);
-    }
-
-    main { padding: 14px 0 40px; }
-
-    .routeInfo,
-    .loadBox {
-      margin: 0 5mm 14px;
-      padding: 11px 12px;
-      border: 1px solid var(--lineColor);
-      border-radius: 14px;
-      background: #ffffff;
-      color: var(--mutedTextColor);
-      font-size: 0.92rem;
-    }
-
-    .routeInfo strong,
-    .loadBox strong {
-      display: block;
-      margin-bottom: 3px;
-      color: var(--textColor);
-      font-size: 1rem;
-    }
-
-    .loadBox code {
-      color: var(--textColor);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 0.88rem;
-    }
-
-    .filePicker {
-      display: block;
-      margin-top: 10px;
-      min-height: 0;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      padding: 0;
     }
 
     .step { margin: 0 5mm 22px; }
@@ -263,6 +256,7 @@
       font-weight: 700;
       line-height: 1;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+      cursor: pointer;
     }
 
     .navArrow:disabled { opacity: 0.35; }
@@ -288,28 +282,155 @@
 
     .errorState { color: #8a1f11; }
 
+    .pickerPage {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: auto;
+      background: var(--pageBackground);
+    }
+
+    .pickerPage.isVisible { display: block; }
+
+    .pickerHeader {
+      position: sticky;
+      top: 0;
+      z-index: 101;
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 5mm 10px;
+      border-bottom: 1px solid var(--lineColor);
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(10px);
+    }
+
+    .backButton {
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--lineColor);
+      border-radius: 999px;
+      background: var(--fieldBackground);
+      color: var(--textColor);
+      font: inherit;
+      font-size: 2rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .pickerTitle {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+    }
+
+    .pickerSearchWrap {
+      position: sticky;
+      top: 65px;
+      z-index: 100;
+      padding: 10px 5mm;
+      border-bottom: 1px solid var(--lineColor);
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(10px);
+    }
+
+    .pickerSearch {
+      padding-right: 13px;
+    }
+
+    .pickerContent {
+      padding: 8px 5mm 32px;
+    }
+
+    .categoryGroup {
+      margin: 0 0 16px;
+    }
+
+    .categoryTitle {
+      margin: 12px 0 7px;
+      color: var(--mutedTextColor);
+      font-size: 0.76rem;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .optionButton {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--lineColor);
+      border-radius: 13px;
+      background: #ffffff;
+      color: var(--textColor);
+      font: inherit;
+      padding: 10px 11px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .optionButton + .optionButton {
+      margin-top: 7px;
+    }
+
+    .optionButton:active {
+      background: var(--fieldBackground);
+    }
+
+    .optionText {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .optionMeta {
+      color: var(--mutedTextColor);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
     @media (min-width: 760px) {
       header,
-      main { max-width: 720px; margin: 0 auto; }
+      main,
+      .pickerHeader,
+      .pickerSearchWrap,
+      .pickerContent {
+        max-width: 720px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
       .fields { grid-template-columns: 1fr 1fr; }
+      .stationField { grid-column: 1 / -1; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1 id="title">Indoor Route Guide</h1>
+    <h1>Indoor Route Guide</h1>
     <div class="fields">
-      <div class="inputWrap">
-        <label for="startInput">Your start</label>
-        <input id="startInput" autocomplete="off" placeholder="Choose start" readonly>
-        <button class="clearButton" id="startClearButton" type="button" aria-label="Clear start">×</button>
-        <div class="suggestions" id="startSuggestions"></div>
+      <div class="fieldWrap stationField">
+        <label for="stationSelect">Train station</label>
+        <select id="stationSelect" disabled>
+          <option>Loading...</option>
+        </select>
       </div>
-      <div class="inputWrap">
-        <label for="endInput">Your destination</label>
-        <input id="endInput" autocomplete="off" placeholder="Choose destination" readonly>
+      <div class="fieldWrap">
+        <label for="startSelectButton">Start</label>
+        <button class="selectButton isEmpty" id="startSelectButton" type="button">Choose start</button>
+        <button class="clearButton" id="startClearButton" type="button" aria-label="Clear start">×</button>
+      </div>
+      <div class="fieldWrap">
+        <label for="endSelectButton">Destination</label>
+        <button class="selectButton isEmpty" id="endSelectButton" type="button">Choose destination</button>
         <button class="clearButton" id="endClearButton" type="button" aria-label="Clear destination">×</button>
-        <div class="suggestions" id="endSuggestions"></div>
       </div>
     </div>
   </header>
@@ -318,16 +439,24 @@
     <p class="emptyState">Loading route data...</p>
   </main>
 
+  <section class="pickerPage" id="pickerPage" aria-hidden="true">
+    <div class="pickerHeader">
+      <button class="backButton" id="pickerBackButton" type="button" aria-label="Back">‹</button>
+      <h2 class="pickerTitle" id="pickerTitle">Choose</h2>
+    </div>
+    <div class="pickerSearchWrap">
+      <label for="pickerSearch">Search</label>
+      <input class="pickerSearch" id="pickerSearch" autocomplete="off" placeholder="Type platform, line, place, or service">
+    </div>
+    <div class="pickerContent" id="pickerContent"></div>
+  </section>
+
   <script>
     var routeData = null;
-    var startInput = document.getElementById("startInput");
-    var endInput = document.getElementById("endInput");
-    var startSuggestions = document.getElementById("startSuggestions");
-    var endSuggestions = document.getElementById("endSuggestions");
-    var startClearButton = document.getElementById("startClearButton");
-    var endClearButton = document.getElementById("endClearButton");
-    var routeArea = document.getElementById("routeArea");
-    var title = document.getElementById("title");
+    var selectedStationIndex = 0;
+    var selectedStartValue = "";
+    var selectedEndValue = "";
+    var activePickerMode = "start";
     var currentViewMode = "sequential";
     var currentStepIndex = 0;
     var touchStartX = 0;
@@ -350,203 +479,54 @@
     var isPinchingImage = false;
     var isPanningImage = false;
 
-    function sortAlphabetically(values) {
-      return values.sort(function (firstValue, secondValue) {
-        return firstValue.localeCompare(secondValue, undefined, { sensitivity: "base", numeric: true });
-      });
-    }
+    var defaultCategoryEncoding = {
+      r: "Rail",
+      t: "Tram",
+      b: "Bus",
+      c: "Connection",
+      p: "Place",
+      s: "Special"
+    };
 
-    function uniqueSorted(values) {
-      var seenValues = {};
-      var resultValues = [];
-      for (var index = 0; index < values.length; index = index + 1) {
-        var value = String(values[index]);
-        var key = value.toLowerCase();
-        if (!seenValues[key]) {
-          seenValues[key] = true;
-          resultValues.push(value);
-        }
+    var categoryTitles = {
+      r: "Rail / Platforms",
+      t: "Trams",
+      b: "Buses",
+      c: "Connections",
+      p: "Places",
+      s: "Special",
+      x: "Other"
+    };
+
+    var categoryShortNames = {
+      r: "Rail",
+      t: "Tram",
+      b: "Bus",
+      c: "Connection",
+      p: "Place",
+      s: "Special",
+      x: "Other"
+    };
+
+    var categoryOrder = ["c", "r", "t", "b", "p", "s", "x"];
+
+    var stationSelect = document.getElementById("stationSelect");
+    var startSelectButton = document.getElementById("startSelectButton");
+    var endSelectButton = document.getElementById("endSelectButton");
+    var startClearButton = document.getElementById("startClearButton");
+    var endClearButton = document.getElementById("endClearButton");
+    var routeArea = document.getElementById("routeArea");
+    var pickerPage = document.getElementById("pickerPage");
+    var pickerBackButton = document.getElementById("pickerBackButton");
+    var pickerTitle = document.getElementById("pickerTitle");
+    var pickerSearch = document.getElementById("pickerSearch");
+    var pickerContent = document.getElementById("pickerContent");
+
+    function getEncoding() {
+      if (routeData && routeData.categoryEncoding) {
+        return routeData.categoryEncoding;
       }
-      return sortAlphabetically(resultValues);
-    }
-
-    function getExactLocationValue(values, typedLocation) {
-      var wantedLocation = String(typedLocation || "").trim().toLowerCase();
-      for (var index = 0; index < values.length; index = index + 1) {
-        if (String(values[index]).trim().toLowerCase() === wantedLocation) {
-          return String(values[index]);
-        }
-      }
-      return "";
-    }
-
-    function getAllStartLocations() {
-      var values = [];
-      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
-        values = values.concat(routeData.routes[routeIndex].startLocations || []);
-      }
-      return uniqueSorted(values);
-    }
-
-    function getAllEndLocations() {
-      var values = [];
-      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
-        values = values.concat(routeData.routes[routeIndex].endLocations || []);
-      }
-      return uniqueSorted(values);
-    }
-
-    function getValidStartsForEnd(endLocation) {
-      var values = [];
-      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
-        var route = routeData.routes[routeIndex];
-        if (locationMatches(route.endLocations || [], endLocation)) {
-          values = values.concat(route.startLocations || []);
-        }
-      }
-      return uniqueSorted(values);
-    }
-
-    function getValidEndsForStart(startLocation) {
-      var values = [];
-      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
-        var route = routeData.routes[routeIndex];
-        if (locationMatches(route.startLocations || [], startLocation)) {
-          values = values.concat(route.endLocations || []);
-        }
-      }
-      return uniqueSorted(values);
-    }
-
-
-    function containsTypedLocation(routeLocations, typedLocation) {
-      var text = String(typedLocation || "").trim().toLowerCase();
-      if (!text) {
-        return true;
-      }
-      for (var index = 0; index < routeLocations.length; index = index + 1) {
-        if (String(routeLocations[index]).toLowerCase().indexOf(text) !== -1) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    function getValidStartsForTypedEnd(endLocation) {
-      var values = [];
-      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
-        var route = routeData.routes[routeIndex];
-        if (containsTypedLocation(route.endLocations || [], endLocation)) {
-          values = values.concat(route.startLocations || []);
-        }
-      }
-      return uniqueSorted(values);
-    }
-
-    function getValidEndsForTypedStart(startLocation) {
-      var values = [];
-      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
-        var route = routeData.routes[routeIndex];
-        if (containsTypedLocation(route.startLocations || [], startLocation)) {
-          values = values.concat(route.endLocations || []);
-        }
-      }
-      return uniqueSorted(values);
-    }
-
-    function filterSuggestions(values, typedLocation) {
-      var text = String(typedLocation || "").trim().toLowerCase();
-      var resultValues = [];
-      for (var index = 0; index < values.length; index = index + 1) {
-        var value = String(values[index]);
-        if (!text || value.toLowerCase().indexOf(text) !== -1) {
-          resultValues.push(value);
-        }
-      }
-      return resultValues;
-    }
-
-    function fillSuggestions(suggestionsElement, values, inputElement) {
-      suggestionsElement.innerHTML = "";
-      for (var index = 0; index < values.length; index = index + 1) {
-        var button = document.createElement("button");
-        button.type = "button";
-        button.className = "suggestionButton";
-        button.textContent = values[index];
-        button.addEventListener("mousedown", function (event) {
-          event.preventDefault();
-        });
-        button.addEventListener("click", function () {
-          inputElement.value = this.textContent;
-          hideSuggestions();
-          currentStepIndex = 0;
-          resetIterativeZoom();
-          updatePage();
-        });
-        suggestionsElement.appendChild(button);
-      }
-
-      if (values.length > 0 && document.activeElement === inputElement) {
-        suggestionsElement.classList.add("isVisible");
-      } else {
-        suggestionsElement.classList.remove("isVisible");
-      }
-    }
-
-    function hideSuggestions() {
-      startSuggestions.classList.remove("isVisible");
-      endSuggestions.classList.remove("isVisible");
-    }
-
-    function updateClearButtons() {
-      if (startInput.value) {
-        startClearButton.classList.add("isVisible");
-      } else {
-        startClearButton.classList.remove("isVisible");
-      }
-
-      if (endInput.value) {
-        endClearButton.classList.add("isVisible");
-      } else {
-        endClearButton.classList.remove("isVisible");
-      }
-    }
-
-    function updatePage() {
-      updateClearButtons();
-      updateSuggestions();
-      renderRoute();
-    }
-
-    function clearInput(inputElement) {
-      inputElement.value = "";
-      currentStepIndex = 0;
-      resetIterativeZoom();
-      inputElement.focus();
-      updatePage();
-    }
-
-    function updateSuggestions() {
-      if (!routeData) {
-        return;
-      }
-
-      var allStarts = getAllStartLocations();
-      var allEnds = getAllEndLocations();
-      var exactStart = getExactLocationValue(allStarts, startInput.value);
-      var exactEnd = getExactLocationValue(allEnds, endInput.value);
-      var allowedStarts = allStarts;
-      var allowedEnds = allEnds;
-
-      if (exactEnd) {
-        allowedStarts = getValidStartsForEnd(exactEnd);
-      }
-      if (exactStart) {
-        allowedEnds = getValidEndsForStart(exactStart);
-      }
-
-      fillSuggestions(startSuggestions, allowedStarts, startInput);
-      fillSuggestions(endSuggestions, allowedEnds, endInput);
+      return defaultCategoryEncoding;
     }
 
     function escapeHtml(value) {
@@ -558,43 +538,365 @@
         .replace(/'/g, "&#039;");
     }
 
-    function locationMatches(routeLocations, typedLocation) {
-      var wantedLocation = typedLocation.trim().toLowerCase();
-      for (var index = 0; index < routeLocations.length; index = index + 1) {
-        if (String(routeLocations[index]).trim().toLowerCase() === wantedLocation) {
+    function normaliseData(data) {
+      var normalisedData = data;
+      if (data && data.stations && data.stations.length) {
+        return data;
+      }
+      if (data && data.routes && data.routes.length) {
+        normalisedData = {
+          schemaVersion: 1,
+          categoryEncoding: defaultCategoryEncoding,
+          stations: [
+            {
+              id: "default-station",
+              name: data.station || "Station",
+              routes: data.routes
+            }
+          ]
+        };
+        return normalisedData;
+      }
+      throw new Error("data.json has no stations array and no routes array.");
+    }
+
+    function getCurrentStation() {
+      if (!routeData || !routeData.stations || !routeData.stations.length) {
+        return null;
+      }
+      if (selectedStationIndex < 0) {
+        selectedStationIndex = 0;
+      }
+      if (selectedStationIndex >= routeData.stations.length) {
+        selectedStationIndex = 0;
+      }
+      return routeData.stations[selectedStationIndex];
+    }
+
+    function getCurrentRoutes() {
+      var station = getCurrentStation();
+      if (!station || !station.routes) {
+        return [];
+      }
+      return station.routes;
+    }
+
+    function getCategoryCode(value) {
+      var text = String(value || "");
+      var firstLetter = text.charAt(0);
+      var encoding = getEncoding();
+      if (firstLetter && encoding[firstLetter]) {
+        return firstLetter;
+      }
+      return "x";
+    }
+
+    function getCategoryTitle(code) {
+      if (categoryTitles[code]) {
+        return categoryTitles[code];
+      }
+      return categoryTitles.x;
+    }
+
+    function getCategoryShortName(code) {
+      if (categoryShortNames[code]) {
+        return categoryShortNames[code];
+      }
+      return categoryShortNames.x;
+    }
+
+    function getDisplayValue(value) {
+      var text = String(value || "");
+      var code = getCategoryCode(text);
+      if (code !== "x") {
+        return text.substring(1);
+      }
+      return text;
+    }
+
+    function valueMatches(values, selectedValue) {
+      var wantedValue = String(selectedValue || "").trim().toLowerCase();
+      for (var index = 0; index < values.length; index = index + 1) {
+        if (String(values[index]).trim().toLowerCase() === wantedValue) {
           return true;
         }
       }
       return false;
     }
 
-    function findRoute(startLocation, endLocation) {
-      for (var index = 0; index < routeData.routes.length; index = index + 1) {
-        var route = routeData.routes[index];
-        if (locationMatches(route.startLocations || [], startLocation) && locationMatches(route.endLocations || [], endLocation)) {
-          return route;
-        }
-      }
-      return null;
+    function routeHasStart(route, value) {
+      var values = [];
+      values = values.concat(route.startLocations || []);
+      values = values.concat(route.connectionsFrom || []);
+      return valueMatches(values, value);
     }
 
-    function getImageSource(route, step) {
-      var imagePath = String(step.image || "");
-      var imageFolder = String(route.imageFolder || "");
+    function routeHasEnd(route, value) {
+      var values = [];
+      values = values.concat(route.endLocations || []);
+      values = values.concat(route.connectionsTo || []);
+      return valueMatches(values, value);
+    }
 
-      if (!imagePath) {
-        return "";
+    function getRouteMatchScore(route, startValue, endValue) {
+      var score = 0;
+      if (valueMatches(route.startLocations || [], startValue)) {
+        score = score + 4;
+      }
+      if (valueMatches(route.endLocations || [], endValue)) {
+        score = score + 4;
+      }
+      if (valueMatches(route.connectionsFrom || [], startValue)) {
+        score = score + 2;
+      }
+      if (valueMatches(route.connectionsTo || [], endValue)) {
+        score = score + 2;
+      }
+      return score;
+    }
+
+    function findRoute(startValue, endValue) {
+      var routes = getCurrentRoutes();
+      var bestRoute = null;
+      var bestScore = -1;
+      var score;
+      for (var index = 0; index < routes.length; index = index + 1) {
+        if (routeHasStart(routes[index], startValue) && routeHasEnd(routes[index], endValue)) {
+          score = getRouteMatchScore(routes[index], startValue, endValue);
+          if (score > bestScore) {
+            bestRoute = routes[index];
+            bestScore = score;
+          }
+        }
+      }
+      return bestRoute;
+    }
+
+    function sortValues(values) {
+      return values.sort(function (firstValue, secondValue) {
+        return getDisplayValue(firstValue).localeCompare(getDisplayValue(secondValue), undefined, { sensitivity: "base", numeric: true });
+      });
+    }
+
+    function uniqueValues(values) {
+      var seenValues = {};
+      var resultValues = [];
+      var value;
+      var key;
+      for (var index = 0; index < values.length; index = index + 1) {
+        value = String(values[index]);
+        key = value.trim().toLowerCase();
+        if (key && !seenValues[key]) {
+          seenValues[key] = true;
+          resultValues.push(value);
+        }
+      }
+      return sortValues(resultValues);
+    }
+
+    function getCandidateValues(mode) {
+      var routes = getCurrentRoutes();
+      var values = [];
+      var route;
+      for (var routeIndex = 0; routeIndex < routes.length; routeIndex = routeIndex + 1) {
+        route = routes[routeIndex];
+        if (mode === "start") {
+          if (!selectedEndValue || routeHasEnd(route, selectedEndValue)) {
+            values = values.concat(route.startLocations || []);
+            values = values.concat(route.connectionsFrom || []);
+          }
+        } else {
+          if (!selectedStartValue || routeHasStart(route, selectedStartValue)) {
+            values = values.concat(route.endLocations || []);
+            values = values.concat(route.connectionsTo || []);
+          }
+        }
+      }
+      return uniqueValues(values);
+    }
+
+    function valuePassesSearch(value, searchText) {
+      var text = String(searchText || "").trim().toLowerCase();
+      var displayValue = getDisplayValue(value).toLowerCase();
+      var rawValue = String(value || "").toLowerCase();
+      var categoryValue = getCategoryTitle(getCategoryCode(value)).toLowerCase();
+      if (!text) {
+        return true;
+      }
+      if (displayValue.indexOf(text) !== -1) {
+        return true;
+      }
+      if (rawValue.indexOf(text) !== -1) {
+        return true;
+      }
+      if (categoryValue.indexOf(text) !== -1) {
+        return true;
+      }
+      return false;
+    }
+
+    function valuesForCategory(values, code, searchText) {
+      var resultValues = [];
+      for (var index = 0; index < values.length; index = index + 1) {
+        if (getCategoryCode(values[index]) === code && valuePassesSearch(values[index], searchText)) {
+          resultValues.push(values[index]);
+        }
+      }
+      return sortValues(resultValues);
+    }
+
+    function formatValueList(values) {
+      var resultText = "";
+      for (var index = 0; index < values.length; index = index + 1) {
+        if (index > 0) {
+          resultText = resultText + " / ";
+        }
+        resultText = resultText + getDisplayValue(values[index]);
+      }
+      if (!resultText) {
+        return "Not specified";
+      }
+      return resultText;
+    }
+
+    function updateSelectorButtons() {
+      if (selectedStartValue) {
+        startSelectButton.textContent = getDisplayValue(selectedStartValue);
+        startSelectButton.classList.remove("isEmpty");
+        startClearButton.classList.add("isVisible");
+      } else {
+        startSelectButton.textContent = "Choose start";
+        startSelectButton.classList.add("isEmpty");
+        startClearButton.classList.remove("isVisible");
       }
 
-      if (imagePath.indexOf("/") !== -1 || imagePath.indexOf("\\") !== -1) {
-        return imagePath;
+      if (selectedEndValue) {
+        endSelectButton.textContent = getDisplayValue(selectedEndValue);
+        endSelectButton.classList.remove("isEmpty");
+        endClearButton.classList.add("isVisible");
+      } else {
+        endSelectButton.textContent = "Choose destination";
+        endSelectButton.classList.add("isEmpty");
+        endClearButton.classList.remove("isVisible");
+      }
+    }
+
+    function fillStationSelect() {
+      var option;
+      var station;
+      stationSelect.innerHTML = "";
+      for (var index = 0; index < routeData.stations.length; index = index + 1) {
+        station = routeData.stations[index];
+        option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = station.name || station.id || "Station";
+        if (station.isMock) {
+          option.textContent = option.textContent + " (mock)";
+        }
+        stationSelect.appendChild(option);
+      }
+      stationSelect.disabled = false;
+      stationSelect.value = String(selectedStationIndex);
+    }
+
+    function createOptionButton(value) {
+      var button = document.createElement("button");
+      var textSpan = document.createElement("span");
+      var metaSpan = document.createElement("span");
+      var code = getCategoryCode(value);
+
+      button.type = "button";
+      button.className = "optionButton";
+      textSpan.className = "optionText";
+      metaSpan.className = "optionMeta";
+      textSpan.textContent = getDisplayValue(value);
+      metaSpan.textContent = getCategoryShortName(code);
+
+      button.appendChild(textSpan);
+      button.appendChild(metaSpan);
+      button.addEventListener("click", function () {
+        selectPickerValue(value);
+      });
+      return button;
+    }
+
+    function renderPickerOptions() {
+      var values = getCandidateValues(activePickerMode);
+      var searchText = pickerSearch.value;
+      var hasAnyOption = false;
+      var group;
+      var groupTitle;
+      var groupValues;
+      var optionButton;
+
+      pickerContent.innerHTML = "";
+
+      for (var categoryIndex = 0; categoryIndex < categoryOrder.length; categoryIndex = categoryIndex + 1) {
+        groupValues = valuesForCategory(values, categoryOrder[categoryIndex], searchText);
+        if (groupValues.length > 0) {
+          hasAnyOption = true;
+          group = document.createElement("section");
+          group.className = "categoryGroup";
+          groupTitle = document.createElement("h3");
+          groupTitle.className = "categoryTitle";
+          groupTitle.textContent = getCategoryTitle(categoryOrder[categoryIndex]);
+          group.appendChild(groupTitle);
+
+          for (var valueIndex = 0; valueIndex < groupValues.length; valueIndex = valueIndex + 1) {
+            optionButton = createOptionButton(groupValues[valueIndex]);
+            group.appendChild(optionButton);
+          }
+
+          pickerContent.appendChild(group);
+        }
       }
 
-      if (imageFolder) {
-        return imageFolder + "/" + imagePath;
+      if (!hasAnyOption) {
+        pickerContent.innerHTML = '<p class="emptyState">No matching options.</p>';
       }
+    }
 
-      return imagePath;
+    function openPicker(mode) {
+      activePickerMode = mode;
+      if (mode === "start") {
+        pickerTitle.textContent = "Choose start";
+      } else {
+        pickerTitle.textContent = "Choose destination";
+      }
+      pickerSearch.value = "";
+      renderPickerOptions();
+      pickerPage.classList.add("isVisible");
+      pickerPage.setAttribute("aria-hidden", "false");
+      pickerPage.scrollTop = 0;
+      pickerSearch.focus();
+    }
+
+    function closePicker() {
+      pickerPage.classList.remove("isVisible");
+      pickerPage.setAttribute("aria-hidden", "true");
+    }
+
+    function selectPickerValue(value) {
+      if (activePickerMode === "start") {
+        selectedStartValue = value;
+      } else {
+        selectedEndValue = value;
+      }
+      currentStepIndex = 0;
+      resetIterativeZoom();
+      closePicker();
+      updatePage();
+    }
+
+    function clearSelection(mode) {
+      if (mode === "start") {
+        selectedStartValue = "";
+      } else {
+        selectedEndValue = "";
+      }
+      currentStepIndex = 0;
+      resetIterativeZoom();
+      updatePage();
     }
 
     function formatDistance(distanceM) {
@@ -620,19 +922,44 @@
       return Math.round(minutes) + " min";
     }
 
+    function getImageSource(route, step) {
+      var imagePath = String(step.image || "");
+      var imageFolder = String(route.imageFolder || "");
+
+      if (!imagePath) {
+        return "";
+      }
+
+      if (imagePath.indexOf("/") !== -1 || imagePath.indexOf("\\") !== -1) {
+        return imagePath;
+      }
+
+      if (imageFolder) {
+        return imageFolder + "/" + imagePath;
+      }
+
+      return imagePath;
+    }
+
     function renderRouteInfo(route) {
       var routeInfo = document.createElement("section");
       var sequentialActive = currentViewMode === "sequential" ? " isActive" : "";
       var iterativeActive = currentViewMode === "iterative" ? " isActive" : "";
+      var chosenText = getDisplayValue(selectedStartValue) + " → " + getDisplayValue(selectedEndValue);
+      var physicalText = formatValueList(route.startLocations || []) + " → " + formatValueList(route.endLocations || []);
 
       routeInfo.className = "routeInfo";
-      routeInfo.innerHTML = "<strong>" + escapeHtml(route.title || "Route") + "</strong>" +
-        "Total distance: " + formatDistance(route.estimatedDistanceM || 0) +
-        " · Walking time at 3 km/h: " + formatWalkingMinutes(route.estimatedDistanceM || 0) +
+      routeInfo.innerHTML =
+        "<strong>Selected route</strong>" +
+        '<div class="routeLine">Chosen: ' + escapeHtml(chosenText) + "</div>" +
+        '<div class="routeLine">Physical route: ' + escapeHtml(physicalText) + "</div>" +
+        '<div class="routeLine">Total distance: ' + escapeHtml(formatDistance(route.estimatedDistanceM || 0)) +
+        " · Walking time at 3 km/h: " + escapeHtml(formatWalkingMinutes(route.estimatedDistanceM || 0)) + "</div>" +
         '<div class="viewSwitch">' +
         '<button class="viewButton' + sequentialActive + '" type="button" data-view-mode="sequential">Sequential</button>' +
         '<button class="viewButton' + iterativeActive + '" type="button" data-view-mode="iterative">Iterative</button>' +
-        '</div>';
+        "</div>";
+
       routeArea.appendChild(routeInfo);
 
       var buttons = routeInfo.querySelectorAll(".viewButton");
@@ -708,7 +1035,7 @@
     }
 
     function updateIterativeStepContent() {
-      var route = findRoute(startInput.value, endInput.value);
+      var route = findRoute(selectedStartValue, selectedEndValue);
       var steps = route ? route.steps || [] : [];
       var step;
 
@@ -749,7 +1076,7 @@
     }
 
     function changeIterativeStep(stepChange) {
-      var route = findRoute(startInput.value, endInput.value);
+      var route = findRoute(selectedStartValue, selectedEndValue);
       var steps = route ? route.steps || [] : [];
       var nextIndex = currentStepIndex + stepChange;
 
@@ -783,6 +1110,10 @@
 
     function renderSequentialView(route) {
       var steps = route.steps || [];
+      if (!steps.length) {
+        routeArea.innerHTML += '<p class="emptyState">This route has no steps yet.</p>';
+        return;
+      }
       for (var index = 0; index < steps.length; index = index + 1) {
         routeArea.appendChild(createStepElement(route, steps[index], false));
       }
@@ -796,7 +1127,7 @@
       var swipeHint;
 
       if (!steps.length) {
-        routeArea.innerHTML += '<p class="emptyState">This route has no steps.</p>';
+        routeArea.innerHTML += '<p class="emptyState">This route has no steps yet.</p>';
         return;
       }
 
@@ -918,20 +1249,18 @@
     }
 
     function renderRoute() {
-      var startLocation = startInput.value;
-      var endLocation = endInput.value;
-
+      var route;
       if (!routeData) {
-        showLoadError("data.json could not be loaded.");
+        routeArea.innerHTML = '<p class="emptyState">Loading route data...</p>';
         return;
       }
 
-      if (!startLocation || !endLocation) {
-        routeArea.innerHTML = '<p class="emptyState">Choose a start and destination.</p>';
+      if (!selectedStartValue || !selectedEndValue) {
+        routeArea.innerHTML = '<section class="hintBox"><strong>Choose a route</strong>Select a station, then choose a start and destination. Start and destination can be platforms, trams, buses, places, special stops, or train connections.</section>';
         return;
       }
 
-      var route = findRoute(startLocation, endLocation);
+      route = findRoute(selectedStartValue, selectedEndValue);
       if (!route) {
         routeArea.innerHTML = '<p class="emptyState">No route found for this combination.</p>';
         return;
@@ -948,93 +1277,77 @@
       }
     }
 
+    function updatePage() {
+      updateSelectorButtons();
+      renderRoute();
+    }
+
     function initialisePage(data) {
-      var allStarts = [];
-      var allEnds = [];
-
-      if (!data || !data.routes || !data.routes.length) {
-        throw new Error("data.json has no routes array.");
-      }
-
-      routeData = data;
-      if (routeData.station) {
-        title.textContent = routeData.station;
-      }
-
-      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
-        var route = routeData.routes[routeIndex];
-        allStarts = allStarts.concat(route.startLocations || []);
-        allEnds = allEnds.concat(route.endLocations || []);
-      }
-
+      routeData = normaliseData(data);
+      selectedStationIndex = 0;
+      selectedStartValue = "";
+      selectedEndValue = "";
+      fillStationSelect();
       updatePage();
     }
 
     function showLoadError(message) {
+      stationSelect.innerHTML = "";
+      stationSelect.disabled = true;
       routeArea.innerHTML = '<p class="errorState">' + escapeHtml(message) + '</p>';
     }
 
-    startInput.addEventListener("keydown", function (event) {
-      event.preventDefault();
-    });
-    endInput.addEventListener("keydown", function (event) {
-      event.preventDefault();
-    });
-    function activateStartInput(event) {
-      if (event) {
-        event.stopPropagation();
-      }
-      if (endInput.value) {
-        endInput.value = "";
-        currentStepIndex = 0;
-        resetIterativeZoom();
-      }
+    stationSelect.addEventListener("change", function () {
+      selectedStationIndex = Number(stationSelect.value) || 0;
+      selectedStartValue = "";
+      selectedEndValue = "";
+      currentStepIndex = 0;
+      resetIterativeZoom();
       updatePage();
-    }
+    });
 
-    function activateEndInput(event) {
-      if (event) {
-        event.stopPropagation();
+    startSelectButton.addEventListener("click", function () {
+      openPicker("start");
+    });
+
+    endSelectButton.addEventListener("click", function () {
+      openPicker("end");
+    });
+
+    startClearButton.addEventListener("click", function (event) {
+      event.stopPropagation();
+      clearSelection("start");
+    });
+
+    endClearButton.addEventListener("click", function (event) {
+      event.stopPropagation();
+      clearSelection("end");
+    });
+
+    pickerBackButton.addEventListener("click", function () {
+      closePicker();
+    });
+
+    pickerSearch.addEventListener("input", function () {
+      renderPickerOptions();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && pickerPage.classList.contains("isVisible")) {
+        closePicker();
       }
-      updatePage();
-    }
-
-    startInput.addEventListener("pointerdown", activateStartInput);
-    endInput.addEventListener("pointerdown", activateEndInput);
-    startInput.addEventListener("click", activateStartInput);
-    endInput.addEventListener("click", activateEndInput);
-
-    startClearButton.addEventListener("mousedown", function (event) {
-      event.preventDefault();
-    });
-    endClearButton.addEventListener("mousedown", function (event) {
-      event.preventDefault();
-    });
-    startClearButton.addEventListener("click", function () {
-      clearInput(startInput);
-    });
-    endClearButton.addEventListener("click", function () {
-      clearInput(endInput);
-    });
-    startInput.addEventListener("focus", updateSuggestions);
-    endInput.addEventListener("focus", updateSuggestions);
-    startInput.addEventListener("blur", function () {
-      setTimeout(hideSuggestions, 120);
-    });
-    endInput.addEventListener("blur", function () {
-      setTimeout(hideSuggestions, 120);
     });
 
     fetch("data.json", { cache: "no-store" })
       .then(function (response) {
         if (!response.ok) {
-          throw new Error("data.json was not found next to index.html.");
+          throw new Error("data.json was not found next to this HTML file.");
         }
         return response.json();
       })
       .then(initialisePage)
-      .catch(function () {
-        showLoadError("data.json could not be loaded.");
+      .catch(function (error) {
+        showLoadError(error.message || "data.json could not be loaded.");
       });
   </script>
 </body>

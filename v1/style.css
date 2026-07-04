@@ -1,0 +1,246 @@
+:root {
+  --bg-color: white;
+  --text-color: rgb(0, 0, 0);
+  --link-color: rgb(60,60,60)
+
+  --font-family: Times New Roman, 'Times New Roman', Times, serif, sans-serif, Arial;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: rgb(0, 0, 0);
+    --text-color: white;
+      --link-color: rgb(150,150,150)
+  }
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-family);
+  max-width: 14cm;
+  margin: 0 auto;
+  padding: 0 1cm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 0px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: 20pt;
+  font-weight: bold;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  width: 100%;
+}
+
+
+p,
+summary,
+details,
+i {
+  width: 100%;
+  font-size: 14pt;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  text-align: left;
+}
+
+li {
+  font-size: 14pt;
+}
+
+ol,
+ul {
+  padding-left: 1.5em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  width: 100%;
+}
+
+#progress-bar {
+  height: 7.5px;
+  background-color: #ccc;
+  width: 100%;
+  max-width: 14cm;
+  position: fixed;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  cursor: pointer;
+  border-radius: 1px;
+}
+
+#progress-bar-progress {
+  height: 100%;
+  width: 0;
+  background-color: #FFC400;
+  border-radius: 1px;
+}
+
+a {
+  text-decoration: none;
+  color: var(--link-color);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.item img {
+  width: 100%;
+  height: auto;
+  padding-top: 0%;
+  border-radius: 3px;
+  padding: 1px;
+}
+
+
+.tooltip {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 2px;
+  border-radius: 1px;
+  z-index: 1;
+  margin-top: -22pt;
+  font-size: 14pt
+}
+
+.item:hover .tooltip {
+  visibility: visible;
+}
+
+.card {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.137);
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  text-align: justify;
+}
+
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: #ffffff14;
+  }
+}
+
+.card-content {
+  padding: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 0 10px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  border-radius: 5px;
+  background-color: #ffffff26;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 2px;
+  font-size: 14pt;
+}
+
+#expandable {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  transition: height 0.3s ease;
+  cursor: pointer;
+}
+
+#expandable.expanded {
+  height: auto;
+}
+
+
+
+#expandable:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+  display: none;
+}
+
+#expandable.collapsed:after {
+  display: block;
+}
+
+#toggleButton {
+  text-decoration: none;
+  display: block;
+  padding: 10px;
+  transition: background-color 0.3s;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #00000000;
+  text-align: center;
+  cursor: pointer;
+  font-size: 14pt;
+  color: inherit;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+#toggleButton:hover {
+  background-color: #74747462;
+}
+
+
+.cta {
+  width: 100%;
+  height: auto;
+
+  margin-bottom: -0.5cm;
+}
+
+.cta iframe {
+  margin-top: 3cm;
+  width: 100%;
+  border-radius: 5px;
+  border: none;
+  display: block;
+  /* Make sure it is block to avoid inline issues */
+  height: 512px;
+}
+
+
+@media (max-width: 14cm) {
+  .cta {
+    width: 100vw;
+  }
+
+  .cta iframe {
+    height: 612px;
+  }
+}
+
+
+    .audio-box { 
+      border-radius: 4px; 
+      width: inherit; 
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      background-color: rgba(0, 0, 0,0.5);
+     
+    }
+
+
+    audio {
+      width: 100%; 
+    } 

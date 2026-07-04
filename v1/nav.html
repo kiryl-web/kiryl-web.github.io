@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Indoor Route Guide</title>
+  <style>
+    :root {
+      --pageBackground: #ffffff;
+      --textColor: #171717;
+      --mutedTextColor: #666666;
+      --lineColor: #e7e7e7;
+      --fieldBackground: #fafafa;
+      --badgeBackground: rgba(255, 255, 255, 0.93);
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      --radius: 16px;
+    }
+  
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--pageBackground);
+      color: var(--textColor);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.35;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 14px 5mm 12px;
+      border-bottom: 1px solid var(--lineColor);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+    }
+
+    .fields { display: grid; gap: 10px; }
+
+    label {
+      display: block;
+      margin: 0 0 5px;
+      color: var(--mutedTextColor);
+      font-size: 0.76rem;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .inputWrap { position: relative; }
+
+    input {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid var(--lineColor);
+      border-radius: 13px;
+      background: var(--fieldBackground);
+      color: var(--textColor);
+      font: inherit;
+      font-size: 1rem;
+      padding: 0 48px 0 13px;
+      outline: none;
+    }
+
+    input:focus { border-color: #999999; background: #ffffff; }
+
+    .clearButton {
+      display: none;
+      position: absolute;
+      right: 7px;
+      top: 26px;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--mutedTextColor);
+      font: inherit;
+      font-size: 1.35rem;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .clearButton.isVisible { display: block; }
+
+    .clearButton:active { background: var(--lineColor); }
+
+    .suggestions {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 5px);
+      z-index: 30;
+      max-height: 210px;
+      overflow: auto;
+      border: 1px solid var(--lineColor);
+      border-radius: 13px;
+      background: #ffffff;
+      box-shadow: var(--shadow);
+    }
+
+    .suggestions.isVisible { display: block; }
+
+    .suggestionButton {
+      display: block;
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid var(--lineColor);
+      background: #ffffff;
+      color: var(--textColor);
+      font: inherit;
+      padding: 12px 13px;
+      text-align: left;
+    }
+
+    .suggestionButton:last-child { border-bottom: 0; }
+
+    .suggestionButton:active { background: var(--fieldBackground); }
+
+    .viewSwitch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .viewButton {
+      min-height: 38px;
+      border: 1px solid var(--lineColor);
+      border-radius: 999px;
+      background: var(--fieldBackground);
+      color: var(--mutedTextColor);
+      font: inherit;
+      font-size: 0.92rem;
+      font-weight: 650;
+    }
+
+    .viewButton.isActive {
+      background: var(--textColor);
+      color: #ffffff;
+      border-color: var(--textColor);
+    }
+
+    main { padding: 14px 0 40px; }
+
+    .routeInfo,
+    .loadBox {
+      margin: 0 5mm 14px;
+      padding: 11px 12px;
+      border: 1px solid var(--lineColor);
+      border-radius: 14px;
+      background: #ffffff;
+      color: var(--mutedTextColor);
+      font-size: 0.92rem;
+    }
+
+    .routeInfo strong,
+    .loadBox strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--textColor);
+      font-size: 1rem;
+    }
+
+    .loadBox code {
+      color: var(--textColor);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.88rem;
+    }
+
+    .filePicker {
+      display: block;
+      margin-top: 10px;
+      min-height: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+    }
+
+    .step { margin: 0 5mm 22px; }
+
+    .imageBox {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: var(--shadow);
+    }
+
+    .imageBox img {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #ffffff;
+    }
+
+    .distanceTag {
+      position: absolute;
+      right: 9px;
+      bottom: 9px;
+      min-width: 54px;
+      padding: 5px 9px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 999px;
+      background: var(--badgeBackground);
+      color: var(--textColor);
+      font-size: 0.84rem;
+      font-weight: 750;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    }
+
+    .description { margin: 9px 2px 0; font-size: 1rem; }
+
+    .iterativeStep {
+      margin: 0 5mm 22px;
+      touch-action: pan-y;
+      user-select: none;
+    }
+
+    .iterativeStep .imageBox img {
+      transform-origin: 0 0;
+      will-change: transform;
+      touch-action: none;
+    }
+
+    .progressText {
+      margin: 0 5mm 10px;
+      color: var(--mutedTextColor);
+      font-size: 0.92rem;
+      text-align: center;
+    }
+
+    .swipeHint {
+      margin: 10px 5mm 0;
+      color: var(--mutedTextColor);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .navArrow {
+      position: absolute;
+      z-index: 2;
+      width: 58px;
+      height: 58px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 999px;
+      background: var(--badgeBackground);
+      color: var(--textColor);
+      font: inherit;
+      font-size: 2.9rem;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    }
+
+    .navArrow:disabled { opacity: 0.35; }
+
+    .navArrowLeft {
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .navArrowRight {
+      right: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .emptyState,
+    .errorState {
+      margin: 24px 5mm;
+      color: var(--mutedTextColor);
+      font-size: 0.96rem;
+    }
+
+    .errorState { color: #8a1f11; }
+
+    @media (min-width: 760px) {
+      header,
+      main { max-width: 720px; margin: 0 auto; }
+      .fields { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="title">Indoor Route Guide</h1>
+    <div class="fields">
+      <div class="inputWrap">
+        <label for="startInput">Your start</label>
+        <input id="startInput" autocomplete="off" placeholder="Choose start" readonly>
+        <button class="clearButton" id="startClearButton" type="button" aria-label="Clear start">×</button>
+        <div class="suggestions" id="startSuggestions"></div>
+      </div>
+      <div class="inputWrap">
+        <label for="endInput">Your destination</label>
+        <input id="endInput" autocomplete="off" placeholder="Choose destination" readonly>
+        <button class="clearButton" id="endClearButton" type="button" aria-label="Clear destination">×</button>
+        <div class="suggestions" id="endSuggestions"></div>
+      </div>
+    </div>
+  </header>
+
+  <main id="routeArea">
+    <p class="emptyState">Loading route data...</p>
+  </main>
+
+  <script>
+    var routeData = null;
+    var startInput = document.getElementById("startInput");
+    var endInput = document.getElementById("endInput");
+    var startSuggestions = document.getElementById("startSuggestions");
+    var endSuggestions = document.getElementById("endSuggestions");
+    var startClearButton = document.getElementById("startClearButton");
+    var endClearButton = document.getElementById("endClearButton");
+    var routeArea = document.getElementById("routeArea");
+    var title = document.getElementById("title");
+    var currentViewMode = "sequential";
+    var currentStepIndex = 0;
+    var touchStartX = 0;
+    var touchStartY = 0;
+    var iterativeImage = null;
+    var iterativeDistanceTag = null;
+    var iterativeDescription = null;
+    var iterativeProgressText = null;
+    var iterativePreviousButton = null;
+    var iterativeNextButton = null;
+    var currentImageZoom = 1;
+    var currentImagePanX = 0;
+    var currentImagePanY = 0;
+    var pinchStartDistance = 0;
+    var pinchStartZoom = 1;
+    var panStartX = 0;
+    var panStartY = 0;
+    var panStartImageX = 0;
+    var panStartImageY = 0;
+    var isPinchingImage = false;
+    var isPanningImage = false;
+
+    function sortAlphabetically(values) {
+      return values.sort(function (firstValue, secondValue) {
+        return firstValue.localeCompare(secondValue, undefined, { sensitivity: "base", numeric: true });
+      });
+    }
+
+    function uniqueSorted(values) {
+      var seenValues = {};
+      var resultValues = [];
+      for (var index = 0; index < values.length; index = index + 1) {
+        var value = String(values[index]);
+        var key = value.toLowerCase();
+        if (!seenValues[key]) {
+          seenValues[key] = true;
+          resultValues.push(value);
+        }
+      }
+      return sortAlphabetically(resultValues);
+    }
+
+    function getExactLocationValue(values, typedLocation) {
+      var wantedLocation = String(typedLocation || "").trim().toLowerCase();
+      for (var index = 0; index < values.length; index = index + 1) {
+        if (String(values[index]).trim().toLowerCase() === wantedLocation) {
+          return String(values[index]);
+        }
+      }
+      return "";
+    }
+
+    function getAllStartLocations() {
+      var values = [];
+      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
+        values = values.concat(routeData.routes[routeIndex].startLocations || []);
+      }
+      return uniqueSorted(values);
+    }
+
+    function getAllEndLocations() {
+      var values = [];
+      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
+        values = values.concat(routeData.routes[routeIndex].endLocations || []);
+      }
+      return uniqueSorted(values);
+    }
+
+    function getValidStartsForEnd(endLocation) {
+      var values = [];
+      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
+        var route = routeData.routes[routeIndex];
+        if (locationMatches(route.endLocations || [], endLocation)) {
+          values = values.concat(route.startLocations || []);
+        }
+      }
+      return uniqueSorted(values);
+    }
+
+    function getValidEndsForStart(startLocation) {
+      var values = [];
+      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
+        var route = routeData.routes[routeIndex];
+        if (locationMatches(route.startLocations || [], startLocation)) {
+          values = values.concat(route.endLocations || []);
+        }
+      }
+      return uniqueSorted(values);
+    }
+
+
+    function containsTypedLocation(routeLocations, typedLocation) {
+      var text = String(typedLocation || "").trim().toLowerCase();
+      if (!text) {
+        return true;
+      }
+      for (var index = 0; index < routeLocations.length; index = index + 1) {
+        if (String(routeLocations[index]).toLowerCase().indexOf(text) !== -1) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function getValidStartsForTypedEnd(endLocation) {
+      var values = [];
+      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
+        var route = routeData.routes[routeIndex];
+        if (containsTypedLocation(route.endLocations || [], endLocation)) {
+          values = values.concat(route.startLocations || []);
+        }
+      }
+      return uniqueSorted(values);
+    }
+
+    function getValidEndsForTypedStart(startLocation) {
+      var values = [];
+      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
+        var route = routeData.routes[routeIndex];
+        if (containsTypedLocation(route.startLocations || [], startLocation)) {
+          values = values.concat(route.endLocations || []);
+        }
+      }
+      return uniqueSorted(values);
+    }
+
+    function filterSuggestions(values, typedLocation) {
+      var text = String(typedLocation || "").trim().toLowerCase();
+      var resultValues = [];
+      for (var index = 0; index < values.length; index = index + 1) {
+        var value = String(values[index]);
+        if (!text || value.toLowerCase().indexOf(text) !== -1) {
+          resultValues.push(value);
+        }
+      }
+      return resultValues;
+    }
+
+    function fillSuggestions(suggestionsElement, values, inputElement) {
+      suggestionsElement.innerHTML = "";
+      for (var index = 0; index < values.length; index = index + 1) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "suggestionButton";
+        button.textContent = values[index];
+        button.addEventListener("mousedown", function (event) {
+          event.preventDefault();
+        });
+        button.addEventListener("click", function () {
+          inputElement.value = this.textContent;
+          hideSuggestions();
+          currentStepIndex = 0;
+          resetIterativeZoom();
+          updatePage();
+        });
+        suggestionsElement.appendChild(button);
+      }
+
+      if (values.length > 0 && document.activeElement === inputElement) {
+        suggestionsElement.classList.add("isVisible");
+      } else {
+        suggestionsElement.classList.remove("isVisible");
+      }
+    }
+
+    function hideSuggestions() {
+      startSuggestions.classList.remove("isVisible");
+      endSuggestions.classList.remove("isVisible");
+    }
+
+    function updateClearButtons() {
+      if (startInput.value) {
+        startClearButton.classList.add("isVisible");
+      } else {
+        startClearButton.classList.remove("isVisible");
+      }
+
+      if (endInput.value) {
+        endClearButton.classList.add("isVisible");
+      } else {
+        endClearButton.classList.remove("isVisible");
+      }
+    }
+
+    function updatePage() {
+      updateClearButtons();
+      updateSuggestions();
+      renderRoute();
+    }
+
+    function clearInput(inputElement) {
+      inputElement.value = "";
+      currentStepIndex = 0;
+      resetIterativeZoom();
+      inputElement.focus();
+      updatePage();
+    }
+
+    function updateSuggestions() {
+      if (!routeData) {
+        return;
+      }
+
+      var allStarts = getAllStartLocations();
+      var allEnds = getAllEndLocations();
+      var exactStart = getExactLocationValue(allStarts, startInput.value);
+      var exactEnd = getExactLocationValue(allEnds, endInput.value);
+      var allowedStarts = allStarts;
+      var allowedEnds = allEnds;
+
+      if (exactEnd) {
+        allowedStarts = getValidStartsForEnd(exactEnd);
+      }
+      if (exactStart) {
+        allowedEnds = getValidEndsForStart(exactStart);
+      }
+
+      fillSuggestions(startSuggestions, allowedStarts, startInput);
+      fillSuggestions(endSuggestions, allowedEnds, endInput);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function locationMatches(routeLocations, typedLocation) {
+      var wantedLocation = typedLocation.trim().toLowerCase();
+      for (var index = 0; index < routeLocations.length; index = index + 1) {
+        if (String(routeLocations[index]).trim().toLowerCase() === wantedLocation) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function findRoute(startLocation, endLocation) {
+      for (var index = 0; index < routeData.routes.length; index = index + 1) {
+        var route = routeData.routes[index];
+        if (locationMatches(route.startLocations || [], startLocation) && locationMatches(route.endLocations || [], endLocation)) {
+          return route;
+        }
+      }
+      return null;
+    }
+
+    function getImageSource(route, step) {
+      var imagePath = String(step.image || "");
+      var imageFolder = String(route.imageFolder || "");
+
+      if (!imagePath) {
+        return "";
+      }
+
+      if (imagePath.indexOf("/") !== -1 || imagePath.indexOf("\\") !== -1) {
+        return imagePath;
+      }
+
+      if (imageFolder) {
+        return imageFolder + "/" + imagePath;
+      }
+
+      return imagePath;
+    }
+
+    function formatDistance(distanceM) {
+      var distanceNumber = Number(distanceM);
+      if (!isFinite(distanceNumber)) {
+        return "0 m";
+      }
+      if (distanceNumber % 1 === 0) {
+        return distanceNumber.toFixed(0) + " m";
+      }
+      return distanceNumber.toFixed(1) + " m";
+    }
+
+    function formatWalkingMinutes(distanceM) {
+      var distanceNumber = Number(distanceM);
+      var minutes = distanceNumber / 50;
+      if (!isFinite(minutes) || minutes < 0) {
+        return "0 min";
+      }
+      if (minutes < 1 && minutes > 0) {
+        return "< 1 min";
+      }
+      return Math.round(minutes) + " min";
+    }
+
+    function renderRouteInfo(route) {
+      var routeInfo = document.createElement("section");
+      var sequentialActive = currentViewMode === "sequential" ? " isActive" : "";
+      var iterativeActive = currentViewMode === "iterative" ? " isActive" : "";
+
+      routeInfo.className = "routeInfo";
+      routeInfo.innerHTML = "<strong>" + escapeHtml(route.title || "Route") + "</strong>" +
+        "Total distance: " + formatDistance(route.estimatedDistanceM || 0) +
+        " · Walking time at 3 km/h: " + formatWalkingMinutes(route.estimatedDistanceM || 0) +
+        '<div class="viewSwitch">' +
+        '<button class="viewButton' + sequentialActive + '" type="button" data-view-mode="sequential">Sequential</button>' +
+        '<button class="viewButton' + iterativeActive + '" type="button" data-view-mode="iterative">Iterative</button>' +
+        '</div>';
+      routeArea.appendChild(routeInfo);
+
+      var buttons = routeInfo.querySelectorAll(".viewButton");
+      for (var index = 0; index < buttons.length; index = index + 1) {
+        buttons[index].addEventListener("click", function () {
+          currentViewMode = this.getAttribute("data-view-mode") || "sequential";
+          renderRoute();
+        });
+      }
+    }
+
+    function createStepElement(route, step, isIterative) {
+      var stepElement = document.createElement("section");
+      var imageBox = document.createElement("div");
+      var image = document.createElement("img");
+      var distanceTag = document.createElement("div");
+      var description = document.createElement("p");
+
+      stepElement.className = isIterative ? "iterativeStep" : "step";
+      imageBox.className = "imageBox";
+      distanceTag.className = "distanceTag";
+      description.className = "description";
+
+      image.src = getImageSource(route, step);
+      image.alt = step.description || "Route step";
+      image.loading = "lazy";
+
+      distanceTag.textContent = formatDistance(step.distanceM);
+      distanceTag.setAttribute("data-distance-m", String(Number(step.distanceM) || 0));
+      description.textContent = step.description || "";
+
+      imageBox.appendChild(image);
+      imageBox.appendChild(distanceTag);
+      stepElement.appendChild(imageBox);
+      stepElement.appendChild(description);
+      return stepElement;
+    }
+
+    function clearIterativeReferences() {
+      iterativeImage = null;
+      iterativeDistanceTag = null;
+      iterativeDescription = null;
+      iterativeProgressText = null;
+      iterativePreviousButton = null;
+      iterativeNextButton = null;
+    }
+
+    function resetIterativeZoom() {
+      currentImageZoom = 1;
+      currentImagePanX = 0;
+      currentImagePanY = 0;
+      applyIterativeImageTransform();
+    }
+
+    function getTouchDistance(firstTouch, secondTouch) {
+      var deltaX = firstTouch.clientX - secondTouch.clientX;
+      var deltaY = firstTouch.clientY - secondTouch.clientY;
+      return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    }
+
+    function applyIterativeImageTransform() {
+      if (!iterativeImage) {
+        return;
+      }
+
+      if (currentImageZoom <= 1) {
+        currentImageZoom = 1;
+        currentImagePanX = 0;
+        currentImagePanY = 0;
+      }
+
+      iterativeImage.style.transform = "translate(" + currentImagePanX + "px, " + currentImagePanY + "px) scale(" + currentImageZoom + ")";
+    }
+
+    function updateIterativeStepContent() {
+      var route = findRoute(startInput.value, endInput.value);
+      var steps = route ? route.steps || [] : [];
+      var step;
+
+      if (!steps.length) {
+        return;
+      }
+
+      if (currentStepIndex < 0) {
+        currentStepIndex = 0;
+      }
+      if (currentStepIndex >= steps.length) {
+        currentStepIndex = steps.length - 1;
+      }
+
+      step = steps[currentStepIndex];
+
+      if (iterativeProgressText) {
+        iterativeProgressText.textContent = "Step " + String(currentStepIndex + 1) + " of " + String(steps.length);
+      }
+      if (iterativeImage) {
+        iterativeImage.src = getImageSource(route, step);
+        iterativeImage.alt = step.description || "Route step";
+        applyIterativeImageTransform();
+      }
+      if (iterativeDistanceTag) {
+        iterativeDistanceTag.textContent = formatDistance(step.distanceM);
+        iterativeDistanceTag.setAttribute("data-distance-m", String(Number(step.distanceM) || 0));
+      }
+      if (iterativeDescription) {
+        iterativeDescription.textContent = step.description || "";
+      }
+      if (iterativePreviousButton) {
+        iterativePreviousButton.disabled = currentStepIndex === 0;
+      }
+      if (iterativeNextButton) {
+        iterativeNextButton.disabled = currentStepIndex === steps.length - 1;
+      }
+    }
+
+    function changeIterativeStep(stepChange) {
+      var route = findRoute(startInput.value, endInput.value);
+      var steps = route ? route.steps || [] : [];
+      var nextIndex = currentStepIndex + stepChange;
+
+      if (!steps.length) {
+        return;
+      }
+      if (nextIndex < 0) {
+        nextIndex = 0;
+      }
+      if (nextIndex >= steps.length) {
+        nextIndex = steps.length - 1;
+      }
+      if (nextIndex !== currentStepIndex) {
+        currentStepIndex = nextIndex;
+        updateIterativeStepContent();
+      }
+    }
+
+    function addArrowButton(imageBox, className, text, stepChange, disabled) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "navArrow " + className;
+      button.textContent = text;
+      button.disabled = disabled;
+      button.addEventListener("click", function () {
+        changeIterativeStep(stepChange);
+      });
+      imageBox.appendChild(button);
+      return button;
+    }
+
+    function renderSequentialView(route) {
+      var steps = route.steps || [];
+      for (var index = 0; index < steps.length; index = index + 1) {
+        routeArea.appendChild(createStepElement(route, steps[index], false));
+      }
+    }
+
+    function renderIterativeView(route) {
+      var steps = route.steps || [];
+      var stepElement;
+      var imageBox;
+      var progressText;
+      var swipeHint;
+
+      if (!steps.length) {
+        routeArea.innerHTML += '<p class="emptyState">This route has no steps.</p>';
+        return;
+      }
+
+      if (currentStepIndex < 0) {
+        currentStepIndex = 0;
+      }
+      if (currentStepIndex >= steps.length) {
+        currentStepIndex = steps.length - 1;
+      }
+
+      progressText = document.createElement("p");
+      progressText.className = "progressText";
+      progressText.textContent = "Step " + String(currentStepIndex + 1) + " of " + String(steps.length);
+      iterativeProgressText = progressText;
+      routeArea.appendChild(progressText);
+
+      stepElement = createStepElement(route, steps[currentStepIndex], true);
+      imageBox = stepElement.querySelector(".imageBox");
+      iterativeImage = stepElement.querySelector("img");
+      iterativeDistanceTag = stepElement.querySelector(".distanceTag");
+      iterativeDescription = stepElement.querySelector(".description");
+
+      iterativePreviousButton = addArrowButton(imageBox, "navArrowLeft", "‹", -1, currentStepIndex === 0);
+      iterativeNextButton = addArrowButton(imageBox, "navArrowRight", "›", 1, currentStepIndex === steps.length - 1);
+
+      applyIterativeImageTransform();
+
+      imageBox.addEventListener("touchstart", function (event) {
+        if (event.touches.length === 2) {
+          isPinchingImage = true;
+          isPanningImage = false;
+          pinchStartDistance = getTouchDistance(event.touches[0], event.touches[1]);
+          pinchStartZoom = currentImageZoom;
+          event.preventDefault();
+          return;
+        }
+
+        if (event.touches.length === 1) {
+          touchStartX = event.touches[0].clientX;
+          touchStartY = event.touches[0].clientY;
+          panStartX = event.touches[0].clientX;
+          panStartY = event.touches[0].clientY;
+          panStartImageX = currentImagePanX;
+          panStartImageY = currentImagePanY;
+          isPanningImage = currentImageZoom > 1;
+        }
+      }, { passive: false });
+
+      imageBox.addEventListener("touchmove", function (event) {
+        var distance;
+        var nextZoom;
+
+        if (event.touches.length === 2 && isPinchingImage) {
+          distance = getTouchDistance(event.touches[0], event.touches[1]);
+          if (pinchStartDistance > 0) {
+            nextZoom = pinchStartZoom * distance / pinchStartDistance;
+            if (nextZoom < 1) {
+              nextZoom = 1;
+            }
+            if (nextZoom > 4) {
+              nextZoom = 4;
+            }
+            currentImageZoom = nextZoom;
+            applyIterativeImageTransform();
+          }
+          event.preventDefault();
+          return;
+        }
+
+        if (event.touches.length === 1 && isPanningImage) {
+          currentImagePanX = panStartImageX + event.touches[0].clientX - panStartX;
+          currentImagePanY = panStartImageY + event.touches[0].clientY - panStartY;
+          applyIterativeImageTransform();
+          event.preventDefault();
+        }
+      }, { passive: false });
+
+      imageBox.addEventListener("touchend", function (event) {
+        var touchEndX;
+        var deltaX;
+
+        if (event.touches.length === 0) {
+          isPinchingImage = false;
+          isPanningImage = false;
+        }
+
+        if (currentImageZoom > 1) {
+          return;
+        }
+
+        if (!event.changedTouches.length) {
+          return;
+        }
+
+        touchEndX = event.changedTouches[0].clientX;
+        deltaX = touchEndX - touchStartX;
+
+        if (Math.abs(deltaX) < 35) {
+          return;
+        }
+
+        if (deltaX > 0) {
+          changeIterativeStep(1);
+        } else {
+          changeIterativeStep(-1);
+        }
+      }, { passive: true });
+
+      imageBox.addEventListener("dblclick", function () {
+        resetIterativeZoom();
+      });
+
+      routeArea.appendChild(stepElement);
+
+      swipeHint = document.createElement("p");
+      swipeHint.className = "swipeHint";
+      swipeHint.textContent = "Swipe right for next. Swipe left for previous. Pinch to zoom; double-tap/click to reset zoom.";
+      routeArea.appendChild(swipeHint);
+    }
+
+    function renderRoute() {
+      var startLocation = startInput.value;
+      var endLocation = endInput.value;
+
+      if (!routeData) {
+        showLoadError("data.json could not be loaded.");
+        return;
+      }
+
+      if (!startLocation || !endLocation) {
+        routeArea.innerHTML = '<p class="emptyState">Choose a start and destination.</p>';
+        return;
+      }
+
+      var route = findRoute(startLocation, endLocation);
+      if (!route) {
+        routeArea.innerHTML = '<p class="emptyState">No route found for this combination.</p>';
+        return;
+      }
+
+      routeArea.innerHTML = "";
+      clearIterativeReferences();
+      renderRouteInfo(route);
+
+      if (currentViewMode === "iterative") {
+        renderIterativeView(route);
+      } else {
+        renderSequentialView(route);
+      }
+    }
+
+    function initialisePage(data) {
+      var allStarts = [];
+      var allEnds = [];
+
+      if (!data || !data.routes || !data.routes.length) {
+        throw new Error("data.json has no routes array.");
+      }
+
+      routeData = data;
+      if (routeData.station) {
+        title.textContent = routeData.station;
+      }
+
+      for (var routeIndex = 0; routeIndex < routeData.routes.length; routeIndex = routeIndex + 1) {
+        var route = routeData.routes[routeIndex];
+        allStarts = allStarts.concat(route.startLocations || []);
+        allEnds = allEnds.concat(route.endLocations || []);
+      }
+
+      updatePage();
+    }
+
+    function showLoadError(message) {
+      routeArea.innerHTML = '<p class="errorState">' + escapeHtml(message) + '</p>';
+    }
+
+    startInput.addEventListener("keydown", function (event) {
+      event.preventDefault();
+    });
+    endInput.addEventListener("keydown", function (event) {
+      event.preventDefault();
+    });
+    function activateStartInput(event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      if (endInput.value) {
+        endInput.value = "";
+        currentStepIndex = 0;
+        resetIterativeZoom();
+      }
+      updatePage();
+    }
+
+    function activateEndInput(event) {
+      if (event) {
+        event.stopPropagation();
+      }
+      updatePage();
+    }
+
+    startInput.addEventListener("pointerdown", activateStartInput);
+    endInput.addEventListener("pointerdown", activateEndInput);
+    startInput.addEventListener("click", activateStartInput);
+    endInput.addEventListener("click", activateEndInput);
+
+    startClearButton.addEventListener("mousedown", function (event) {
+      event.preventDefault();
+    });
+    endClearButton.addEventListener("mousedown", function (event) {
+      event.preventDefault();
+    });
+    startClearButton.addEventListener("click", function () {
+      clearInput(startInput);
+    });
+    endClearButton.addEventListener("click", function () {
+      clearInput(endInput);
+    });
+    startInput.addEventListener("focus", updateSuggestions);
+    endInput.addEventListener("focus", updateSuggestions);
+    startInput.addEventListener("blur", function () {
+      setTimeout(hideSuggestions, 120);
+    });
+    endInput.addEventListener("blur", function () {
+      setTimeout(hideSuggestions, 120);
+    });
+
+    fetch("data.json", { cache: "no-store" })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error("data.json was not found next to index.html.");
+        }
+        return response.json();
+      })
+      .then(initialisePage)
+      .catch(function () {
+        showLoadError("data.json could not be loaded.");
+      });
+  </script>
+</body>
+</html>
