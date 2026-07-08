@@ -136,8 +136,7 @@
             "cS1 Meißen Triebischtal",
             "cS2 Dresden Flughafen",
             "cRB 60 / RE 1 Görlitz/Zgorzelec",
-            "cRB 61 / RE 2 Zittau/Liberec",
-            "cS8 Kamenz"
+            "cRB 61 / RE 2 Zittau/Liberec"
           ],
           "connectionsTo": [
             "cS1 Replacement service",
@@ -428,8 +427,7 @@
             "cS1 Meißen Triebischtal",
             "cS2 Dresden Flughafen",
             "cRB 60 / RE 1 Görlitz/Zgorzelec",
-            "cRB 61 / RE 2 Zittau/Liberec",
-            "cS8 Kamenz"
+            "cRB 61 / RE 2 Zittau/Liberec"
           ]
         },
         {
@@ -459,8 +457,7 @@
             "cS1 Meißen Triebischtal",
             "cS2 Dresden Flughafen",
             "cRB 60 / RE 1 Görlitz/Zgorzelec",
-            "cRB 61 / RE 2 Zittau/Liberec",
-            "cS8 Kamenz"
+            "cRB 61 / RE 2 Zittau/Liberec"
           ]
         }
       ]
