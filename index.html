@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A product design and engineering portfolio covering an independent Android business, hardware prototypes, and software projects.">
+  <title>Product Design &amp; Engineering Portfolio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --black: #0a0a0a;
+      --white: #f5f2ec;
+      --gold: #d0ab63;
+      --gray: #c5c0b6;
+      --rule: #36332d;
+      --paper: #111;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--black);
+      color: var(--white);
+      font: 1rem / 1.55 "Times New Roman", Times, serif;
+    }
+
+    .wrap {
+      width: min(90%, 64rem);
+      margin-inline: auto;
+    }
+
+    .intro, footer {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .intro {
+      border-top: 2px solid var(--gold);
+      background: radial-gradient(ellipse at top right, #1b1811, transparent 55%), var(--black);
+    }
+
+    .site-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      padding-block: 0.75rem;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 1rem;
+      font-size: 0.9375rem;
+    }
+
+    .brand { font-size: 1.0625rem; }
+
+    a {
+      color: inherit;
+      text-underline-offset: 0.25em;
+    }
+
+    .site-header a { text-decoration: none; }
+    .site-header a:hover { text-decoration: underline; }
+
+    a:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 5px;
+    }
+
+    .hero, .project, .about-grid {
+      display: grid;
+      gap: clamp(1rem, 3vw, 2.5rem);
+    }
+
+    .hero {
+      grid-template-columns: 1.3fr 1fr;
+      align-items: center;
+      padding-block: clamp(1.75rem, 4vw, 3rem);
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: normal;
+      line-height: 1.2;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 3vw, 2.375rem);
+      letter-spacing: -0.025em;
+    }
+
+    h1 span, footer span { color: var(--gold); }
+    h2 { font-size: clamp(1.375rem, 2.25vw, 1.625rem); }
+    h3 { font-size: 1.1875rem; }
+
+    p { margin: 0.7rem 0 0; }
+
+    .byline {
+      margin: 0 0 0.4rem;
+      color: var(--gold);
+    }
+
+    .hero > p {
+      max-width: 46ch;
+      margin: 0;
+      padding-inline-start: 1.15rem;
+      border-inline-start: 1px solid var(--gold);
+      color: #eee;
+      font-size: 1.0625rem;
+    }
+
+    .section { padding-block: clamp(1.75rem, 4vw, 3rem); }
+
+    .band {
+      background: var(--paper);
+      border-block: 1px solid var(--rule);
+    }
+
+    .project {
+      grid-template-columns: 1fr 1.8fr;
+      margin-top: 1rem;
+      padding-block: clamp(1rem, 2.5vw, 1.5rem);
+      border-top: 2px solid var(--gold);
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .category {
+      margin: 0 0 0.55rem;
+      color: var(--gold);
+      font-size: 0.85rem;
+      font-weight: bold;
+      letter-spacing: 0.065em;
+      text-transform: uppercase;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.65rem 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .tags li {
+      border: 1px solid #8b7448;
+      border-radius: 1rem;
+      padding: 0.2rem 0.65rem;
+      color: var(--white);
+      font-size: 0.875rem;
+    }
+
+    .availability {
+      padding: 0.85rem 0 1.25rem;
+      border-top: 1px solid var(--rule);
+    }
+
+    .availability h2 { font-size: 1.0625rem; }
+
+    .copy p:first-child { margin-top: 0; }
+
+    .copy p, .experience p, .profile p {
+      max-width: 64ch;
+      color: var(--gray);
+    }
+
+    .experience, .education {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem clamp(1rem, 3vw, 2.5rem);
+      margin-top: 1rem;
+    }
+
+    .experience article, .education div {
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--gold);
+    }
+
+    .education {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 0;
+    }
+    .education dt { font-size: 1.125rem; }
+    .education dd { margin: 0.4rem 0 0; }
+
+    .about-grid {
+      grid-template-columns: 1fr 1fr;
+      margin-top: 1rem;
+    }
+
+    .profile + .profile { margin-top: 1.25rem; }
+
+    .project-note {
+      margin-top: 1.25rem;
+      color: var(--gray);
+    }
+
+    footer .wrap {
+      padding-block: 0.875rem;
+      text-align: right;
+    }
+
+    @media (max-width: 48rem) {
+      .hero, .project, .experience, .education, .about-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .project { gap: 0.75rem; }
+    }
+  </style>
+</head>
+<body id="top">
+  <div class="intro">
+    <header class="site-header wrap">
+      <a class="brand" href="#top">Portfolio</a>
+      <nav aria-label="Main navigation">
+        <a href="#work">Project</a>
+        <a href="#experience">Experience</a>
+        <a href="#education">Education</a>
+        <a href="#about">About</a>
+        <a href="portfolio-zh.html" lang="zh-Hans" hreflang="zh-Hans">简体中文</a>
+      </nav>
+    </header>
+
+    <div class="hero wrap">
+      <div>
+        <p class="byline">K. P. · 19 years old · Germany</p>
+        <h1>Product design <span>&amp;</span> engineering</h1>
+      </div>
+      <p>I love all things that are iterative. Whether it’s software, hardware, or business, I enjoy coming up with ideas, building prototypes, seeing where they fail, and improving them.</p>
+    </div>
+
+    <section class="availability wrap" aria-labelledby="availability-title">
+      <h2 id="availability-title">Searching for</h2>
+      <ul class="tags">
+        <li><strong>Student job</strong> · Start in March, April, or May 2027 · Finish in July 2027</li>
+        <li><strong>East Asia internship</strong> · Start in August or September 2027 · 6 months</li>
+      </ul>
+    </section>
+  </div>
+
+  <main>
+    <section class="section wrap" id="work" aria-labelledby="projects-title">
+      <h2 id="projects-title">Featured project</h2>
+
+      <article class="project">
+        <div>
+          <p class="category">My first business</p>
+          <h3>Math learning app</h3>
+      
+        </div>
+        <div class="copy">
+          <p>I started my first business at 13 and learned to program so I could build the app. I spent nearly 3 years developing an Android app that rewarded math practice with games.</p>
+          <p>I spent roughly 70% of my time on programming and design and 30% on marketing. I made videos, posters, and ads for the app. In one video, I even solved 10,000 mental math problems in 11 hours! The project earned me 1 prize and shaped how I approach product design.</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="section band" id="experience" aria-labelledby="experience-title">
+      <div class="wrap">
+        <h2 id="experience-title">Experience</h2>
+
+        <div class="experience">
+          <article>
+            <h3>Pulse oximeter prototype</h3>
+            <ul class="tags" aria-label="Skills used">
+              <li>PCB design</li>
+              <li>3D CAD</li>
+            </ul>
+            <p>I designed a pulse oximeter prototype and learned the basics of PCB design in KiCad and 3D CAD in Autodesk Inventor. That’s when I realized how much I enjoy iterating on hardware, too.</p>
+          </article>
+
+          <article>
+            <h3>Tumor classification</h3>
+            <ul class="tags">
+              <li>Python</li>
+              <li>Machine learning</li>
+            </ul>
+            <p>I built a tumor classification model in Python during a 3-week digital medicine program.</p>
+          </article>
+
+          <article>
+            <h3>Offline app prototype</h3>
+            <p>During an internship at a small software company, I developed an app prototype to make an existing web product usable offline.</p>
+          </article>
+
+          <article>
+            <h3>Electrochemical sensor calibration</h3>
+            <ul class="tags">
+              <li>Scientific software</li>
+              <li>Automation</li>
+            </ul>
+            <p>During a research internship, I built a drag-and-drop tool that automates the calculations for electrochemical sensor calibration.</p>
+          </article>
+
+          <article>
+            <h3>Startup fellowship</h3>
+            <ul class="tags">
+              <li>Product design</li>
+              <li>Business model validation</li>
+            </ul>
+            <p>I worked on a one-semester product design challenge in tourism. This semester, I’m helping a semiconductor startup validate its business model.</p>
+          </article>
+
+          <article>
+            <h3>Native Android development</h3>
+            <ul class="tags">
+              <li>Java</li>
+              <li>Kotlin</li>
+            </ul>
+            <p>I learned Java and Kotlin for native Android development in a 10-month programming course.</p>
+          </article>
+
+          <article>
+            <h3>SEMICON Europa Hackathon, Munich</h3>
+            <ul class="tags">
+              <li>Rapid prototyping</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="education" aria-labelledby="education-title">
+      <h2 id="education-title">Education &amp; recognition</h2>
+
+      <dl class="education">
+        <div>
+          <dt>Biomedical engineering (electrical engineering faculty)</dt>
+          <dd>Diplom in progress · 2 of 5 years completed<br>Deutschlandstipendium recipient.</dd>
+        </div>
+
+        <div>
+          <dt>Abitur · 1.0 (highest overall grade)</dt>
+          <dd>I skipped 9th grade because I wanted to move faster through school.</dd>
+        </div>
+
+        <div>
+          <dt>futureSAX Innovation School</dt>
+          <dd>1st place for my business idea and pitch.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="section band" id="about" aria-labelledby="about-title">
+      <div class="wrap">
+        <h2 id="about-title">About me</h2>
+
+        <div class="about-grid">
+          <div>
+            <div class="profile">
+              <h3>YouTube &amp; teaching</h3>
+              <p>On YouTube, I document what I’m working on, the mistakes I make, and what I learn from them. I’ve made 100+ long-form videos and have also tutored math. Yes, content creation is also iterative!</p>
+            </div>
+
+            <div class="profile">
+              <h3>Outside engineering</h3>
+              <p>I’m into photography and videography. I also run, go to the gym, and travel. I enjoy reading, and meditation and prayer are a regular part of my life.</p>
+            </div>
+          </div>
+
+          <div>
+            <div class="profile">
+              <h3>Languages</h3>
+              <ul class="tags">
+                <li>German · native</li>
+                <li>Russian · native</li>
+                <li>English</li>
+                <li>Chinese · basic</li>
+              </ul>
+            </div>
+
+            <div class="profile">
+              <h3>What I want to work on</h3>
+              <p>I want to build electrical products at a startup, where I can prototype hardware, develop the accompanying software, and talk directly with users.</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="project-note">I’m happy to share project materials on request.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <a href="#top">Back to top <span aria-hidden="true">&uarr;</span></a>
+    </div>
+  </footer>
+</body>
+</html>

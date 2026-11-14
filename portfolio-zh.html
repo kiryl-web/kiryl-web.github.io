@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="产品设计与工程作品集，涵盖 Android 应用创业项目、硬件原型和软件项目。">
+  <title>产品设计与工程作品集</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --black: #0a0a0a;
+      --white: #f5f2ec;
+      --gold: #d0ab63;
+      --gray: #c5c0b6;
+      --rule: #36332d;
+      --paper: #111;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--black);
+      color: var(--white);
+      font: 1rem / 1.55 "Times New Roman", Times, "Noto Serif CJK SC", "Songti SC", SimSun, serif;
+    }
+
+    .wrap {
+      width: min(90%, 64rem);
+      margin-inline: auto;
+    }
+
+    .intro, footer {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .intro {
+      border-top: 2px solid var(--gold);
+      background: radial-gradient(ellipse at top right, #1b1811, transparent 55%), var(--black);
+    }
+
+    .site-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      padding-block: 0.75rem;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 1rem;
+      font-size: 0.9375rem;
+    }
+
+    .brand { font-size: 1.0625rem; }
+
+    a {
+      color: inherit;
+      text-underline-offset: 0.25em;
+    }
+
+    .site-header a { text-decoration: none; }
+    .site-header a:hover { text-decoration: underline; }
+
+    a:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 5px;
+    }
+
+    .hero, .project, .about-grid {
+      display: grid;
+      gap: clamp(1rem, 3vw, 2.5rem);
+    }
+
+    .hero {
+      grid-template-columns: 1.3fr 1fr;
+      align-items: center;
+      padding-block: clamp(1.75rem, 4vw, 3rem);
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: normal;
+      line-height: 1.2;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 3vw, 2.375rem);
+      letter-spacing: -0.025em;
+    }
+
+    h1 span, footer span { color: var(--gold); }
+    h2 { font-size: clamp(1.375rem, 2.25vw, 1.625rem); }
+    h3 { font-size: 1.1875rem; }
+
+    p { margin: 0.7rem 0 0; }
+
+    .byline {
+      margin: 0 0 0.4rem;
+      color: var(--gold);
+    }
+
+    .hero > p {
+      max-width: 46ch;
+      margin: 0;
+      padding-inline-start: 1.15rem;
+      border-inline-start: 1px solid var(--gold);
+      color: #eee;
+      font-size: 1.0625rem;
+    }
+
+    .section { padding-block: clamp(1.75rem, 4vw, 3rem); }
+
+    .band {
+      background: var(--paper);
+      border-block: 1px solid var(--rule);
+    }
+
+    .project {
+      grid-template-columns: 1fr 1.8fr;
+      margin-top: 1rem;
+      padding-block: clamp(1rem, 2.5vw, 1.5rem);
+      border-top: 2px solid var(--gold);
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .category {
+      margin: 0 0 0.55rem;
+      color: var(--gold);
+      font-size: 0.85rem;
+      font-weight: bold;
+      letter-spacing: 0.065em;
+      text-transform: uppercase;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.65rem 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .tags li {
+      border: 1px solid #8b7448;
+      border-radius: 1rem;
+      padding: 0.2rem 0.65rem;
+      color: var(--white);
+      font-size: 0.875rem;
+    }
+
+    .availability {
+      padding: 0.85rem 0 1.25rem;
+      border-top: 1px solid var(--rule);
+    }
+
+    .availability h2 { font-size: 1.0625rem; }
+
+    .copy p:first-child { margin-top: 0; }
+
+    .copy p, .experience p, .profile p {
+      max-width: 64ch;
+      color: var(--gray);
+    }
+
+    .experience, .education {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem clamp(1rem, 3vw, 2.5rem);
+      margin-top: 1rem;
+    }
+
+    .experience article, .education div {
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--gold);
+    }
+
+    .education {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 0;
+    }
+    .education dt { font-size: 1.125rem; }
+    .education dd { margin: 0.4rem 0 0; }
+
+    .about-grid {
+      grid-template-columns: 1fr 1fr;
+      margin-top: 1rem;
+    }
+
+    .profile + .profile { margin-top: 1.25rem; }
+
+    .project-note {
+      margin-top: 1.25rem;
+      color: var(--gray);
+    }
+
+    footer .wrap {
+      padding-block: 0.875rem;
+      text-align: right;
+    }
+
+    @media (max-width: 48rem) {
+      .hero, .project, .experience, .education, .about-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .project { gap: 0.75rem; }
+    }
+  </style>
+</head>
+<body id="top">
+  <div class="intro">
+    <header class="site-header wrap">
+      <a class="brand" href="#top">作品集</a>
+      <nav aria-label="主导航">
+        <a href="#work">项目</a>
+        <a href="#experience">项目经历</a>
+        <a href="#education">教育背景</a>
+        <a href="#about">关于我</a>
+      </nav>
+    </header>
+
+    <div class="hero wrap">
+      <div>
+        <p class="byline">K. P. · 19 岁 · 德国</p>
+        <p class="byline">本页简体中文版由 AI 翻译。</p>
+        <h1>产品设计 <span>与</span> 工程</h1>
+      </div>
+      <p>我喜欢通过反复尝试把事情做得更好。无论是软件、硬件还是商业项目，我都喜欢提出想法、制作原型、找出问题，再动手改进。</p>
+    </div>
+
+    <section class="availability wrap" aria-labelledby="availability-title">
+      <h2 id="availability-title">求职与实习时间</h2>
+      <ul class="tags">
+        <li><strong>学生兼职</strong> · 2027 年 3、4 或 5 月开始 · 2027 年 7 月结束</li>
+        <li><strong>东亚地区实习</strong> · 2027 年 8 月或 9 月开始 · 为期 6 个月</li>
+      </ul>
+    </section>
+  </div>
+
+  <main>
+    <section class="section wrap" id="work" aria-labelledby="projects-title">
+      <h2 id="projects-title">代表项目</h2>
+
+      <article class="project">
+        <div>
+          <p class="category">我的首次创业</p>
+          <h3>数学学习应用</h3>
+      
+        </div>
+        <div class="copy">
+          <p>我 13 岁时开始了第一次创业。为了自己做出这款应用，我学会了编程。我花了近 3 年开发一款 Android 应用，用户完成数学练习后就能玩游戏。</p>
+          <p>我把大约 70% 的时间花在编程和设计上，另外 30% 用于推广。我为这款应用制作了视频、海报和广告。有一期视频里，我甚至在 11 小时内做了 10,000 道心算题！我凭这个项目获得了 1 个奖项，也在过程中形成了自己的产品设计方法。</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="section band" id="experience" aria-labelledby="experience-title">
+      <div class="wrap">
+        <h2 id="experience-title">项目经历</h2>
+
+        <div class="experience">
+          <article>
+            <h3>脉搏血氧仪原型</h3>
+            <ul class="tags" aria-label="所用技能">
+              <li>PCB 设计</li>
+              <li>3D CAD</li>
+            </ul>
+            <p>我设计了一个脉搏血氧仪原型，学习了用 KiCad 做 PCB 设计和用 Autodesk Inventor 做 3D CAD 建模的基础知识。也是在这个项目里，我发现自己同样喜欢反复改进硬件设计。</p>
+          </article>
+
+          <article>
+            <h3>肿瘤分类</h3>
+            <ul class="tags">
+              <li>Python</li>
+              <li>机器学习</li>
+            </ul>
+            <p>在一个为期 3 周的数字医学项目中，我用 Python 构建了一个肿瘤分类模型。</p>
+          </article>
+
+          <article>
+            <h3>离线应用原型</h3>
+            <p>在一家小型软件公司实习期间，我开发了一个应用原型，让现有的网页产品可以离线使用。</p>
+          </article>
+
+          <article>
+            <h3>电化学传感器校准</h3>
+            <ul class="tags">
+              <li>科研软件</li>
+              <li>自动化</li>
+            </ul>
+            <p>在科研实习期间，我开发了一款支持拖放操作的工具，用于自动完成电化学传感器校准所需的计算。</p>
+          </article>
+
+          <article>
+            <h3>创业研修项目</h3>
+            <ul class="tags">
+              <li>产品设计</li>
+              <li>商业模式验证</li>
+            </ul>
+            <p>我曾参与一个为期一学期的旅游行业产品设计项目。本学期，我正在协助一家半导体初创公司验证其商业模式。</p>
+          </article>
+
+          <article>
+            <h3>Android 原生开发</h3>
+            <ul class="tags">
+              <li>Java</li>
+              <li>Kotlin</li>
+            </ul>
+            <p>在为期 10 个月的编程课程中，我学习了如何使用 Java 和 Kotlin 开发 Android 原生应用。</p>
+          </article>
+
+          <article>
+            <h3>SEMICON Europa 黑客松（慕尼黑）</h3>
+            <ul class="tags">
+              <li>快速原型开发</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="education" aria-labelledby="education-title">
+      <h2 id="education-title">教育背景与荣誉</h2>
+
+      <dl class="education">
+        <div>
+          <dt>生物医学工程（电气工程学院）</dt>
+          <dd>Diplom 学位在读 · 学制 5 年，已完成 2 年<br>获德国国家奖学金（Deutschlandstipendium）。</dd>
+        </div>
+
+        <div>
+          <dt>德国高中毕业资格（Abitur）· 1.0（最高总评等级）</dt>
+          <dd>为了加快学习进度，我跳过了 9 年级。</dd>
+        </div>
+
+        <div>
+          <dt>futureSAX Innovation School</dt>
+          <dd>凭创业构想和路演获得第 1 名。</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="section band" id="about" aria-labelledby="about-title">
+      <div class="wrap">
+        <h2 id="about-title">关于我</h2>
+
+        <div class="about-grid">
+          <div>
+            <div class="profile">
+              <h3>YouTube 与数学辅导</h3>
+              <p>我在 YouTube 上记录自己正在做的事、犯过的错，以及从中学到的东西。我制作了 100 多条长视频，也做过数学辅导。没错，做内容也要不断迭代！</p>
+            </div>
+
+            <div class="profile">
+              <h3>业余爱好</h3>
+              <p>我喜欢摄影、拍视频，也喜欢跑步、健身和旅行。我也喜欢阅读，冥想和祈祷是我日常生活的一部分。</p>
+            </div>
+          </div>
+
+          <div>
+            <div class="profile">
+              <h3>语言</h3>
+              <ul class="tags">
+                <li>德语 · 母语</li>
+                <li>俄语 · 母语</li>
+                <li>英语</li>
+                <li>中文 · 基础</li>
+              </ul>
+              <p>我之前去过中国，很喜欢那次旅行，所以计划在 2026 年 12 月至 2027 年 1 月上旬再去中国旅行。我的中文目前只够应付点餐、问路这类简单的日常场景。</p>
+            </div>
+
+            <div class="profile">
+              <h3>我想做的事</h3>
+              <p>我希望在初创公司参与电气产品开发，亲手做硬件原型、编写配套软件，并直接和用户交流。</p>
+            </div>
+          </div>
+        </div>
+
+        <p class="project-note">如需了解项目细节，欢迎联系我索取相关资料。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <a href="#top">返回顶部 <span aria-hidden="true">↑</span></a>
+    </div>
+  </footer>
+</body>
+</html>
